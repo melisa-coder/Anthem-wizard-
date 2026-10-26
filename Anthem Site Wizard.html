@@ -1,0 +1,1251 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Anthem Site Wizard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Serif+Display&family=Mulish:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: three-pane workshop. Step rail | step form | live park-site preview. Preview becomes a drawer on narrow screens. */
+:root{
+  --bg:#EEF2F8; --surface:#FFFFFF; --surface-2:#F5F8FC; --ink:#131C2B; --muted:#56657A; --line:#D6DEEA;
+  --accent:#1D4E9A; --accent-ink:#FFFFFF; --accent-soft:#E0E9F7;
+  --ok:#2E7A4D; --ok-soft:#E3F2E8; --warn:#9A6208; --warn-soft:#FBF0DB; --crit:#B03E2B; --crit-soft:#FBE6E1;
+  --info:#2F5D8A; --info-soft:#E4EDF7;
+  --shadow:0 1px 2px rgba(19,28,43,.06),0 6px 24px rgba(19,28,43,.07);
+  --f-ui:"Hanken Grotesk",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --top:56px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1320; --surface:#151D2C; --surface-2:#1A2436; --ink:#E3EAF5; --muted:#91A0B8; --line:#28344A;
+  --accent:#6EA3EC; --accent-ink:#0A1220; --accent-soft:#1A2C48;
+  --ok:#62BC86; --ok-soft:#173226; --warn:#E3AA4C; --warn-soft:#382A12; --crit:#EA8169; --crit-soft:#3A1E18;
+  --info:#7FAEDD; --info-soft:#18283A; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1320; --surface:#151D2C; --surface-2:#1A2436; --ink:#E3EAF5; --muted:#91A0B8; --line:#28344A;
+  --accent:#6EA3EC; --accent-ink:#0A1220; --accent-soft:#1A2C48;
+  --ok:#62BC86; --ok-soft:#173226; --warn:#E3AA4C; --warn-soft:#382A12; --crit:#EA8169; --crit-soft:#3A1E18;
+  --info:#7FAEDD; --info-soft:#18283A; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.25); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{text-wrap:balance;margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:12px}
+.muted{color:var(--muted)}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:14px;min-height:var(--top);padding-block:8px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.01em;font-size:15px;white-space:nowrap;cursor:pointer;background:none;border:0;padding:0}
+.logo svg{flex:none}
+.proto{font-size:11px;font-weight:700;color:var(--warn);background:var(--warn-soft);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.crumbs{display:flex;align-items:center;gap:6px;color:var(--muted);min-width:0}
+.crumbs b{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.saved{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.saved i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+.role{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.role select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-size:13px;color:var(--ink);max-width:220px}
+
+/* buttons, chips */
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);padding:8px 13px;border-radius:9px;font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.small{padding:5px 9px;font-size:12px;border-radius:7px}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.crit{background:var(--crit-soft);color:var(--crit);border-color:transparent}
+.chip.info{background:var(--info-soft);color:var(--info);border-color:transparent}
+.chip.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.req{font-family:var(--f-mono);font-size:10.5px;font-weight:500;color:var(--info);background:var(--info-soft);padding:2px 6px;border-radius:5px;white-space:nowrap}
+body.hide-tags .req,body.hide-tags .req-row{display:none!important}
+
+/* parks dashboard */
+.page{max-width:1180px;margin:0 auto;padding-block:28px 60px;display:grid;gap:22px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.page-head h1{font-size:28px;letter-spacing:-.02em;font-weight:800}
+.page-head p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.banner{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line);flex-wrap:wrap}
+.banner .grow{flex:1;min-width:220px}
+.banner.resume{border-color:var(--accent);background:var(--accent-soft)}
+.alerts{display:grid;gap:8px}
+.alert{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);flex-wrap:wrap}
+.alert .bar{width:4px;align-self:stretch;border-radius:4px;background:var(--warn);flex:none}
+.alert.crit .bar{background:var(--crit)}
+.alert .grow{flex:1;min-width:200px}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+table.parks{width:100%;border-collapse:collapse;min-width:860px}
+table.parks th{text-align:left;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:12px 14px;border-bottom:1px solid var(--line)}
+table.parks td{padding:14px;border-bottom:1px solid var(--line);vertical-align:middle;font-variant-numeric:tabular-nums}
+table.parks tr:last-child td{border-bottom:0}
+table.parks tbody tr{cursor:pointer}
+table.parks tbody tr:hover td{background:var(--surface-2)}
+.pname{display:flex;align-items:center;gap:10px}
+.swatch{width:30px;height:30px;border-radius:8px;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px}
+.pname b{display:block}
+.pname small{color:var(--muted)}
+.prog{display:flex;align-items:center;gap:8px;min-width:150px}
+.prog .track{flex:1;height:7px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.prog .fill{height:100%;background:var(--accent);border-radius:9px}
+.prog span{font-size:12px;color:var(--muted);width:34px;text-align:right}
+.new-park{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:16px;background:var(--surface);border:1px dashed var(--line);border-radius:14px}
+.new-park .field{min-width:200px;flex:1}
+
+/* workspace */
+.ws{display:grid;grid-template-columns:250px minmax(0,1fr) minmax(0,1.08fr);align-items:start;min-height:calc(100vh - var(--top))}
+.rail{position:sticky;top:calc(var(--top) + env(safe-area-inset-top,0px));max-height:calc(100vh - var(--top));overflow:auto;padding:18px 10px 30px 0;padding-left:max(12px,env(safe-area-inset-left,0px));border-right:1px solid var(--line);background:var(--surface)}
+.park-card{padding:10px 10px 14px;display:grid;gap:8px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.park-card .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.park-card h2{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.stage-label{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:12px 10px 4px}
+.step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border-radius:9px;border:0;background:transparent;cursor:pointer;font-size:13.5px;font-weight:500}
+.step:hover{background:var(--surface-2)}
+.step.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.step .st{flex:none;width:18px;height:18px;display:grid;place-items:center}
+.step .t{flex:1;min-width:0}
+.step .lockic{opacity:.6}
+.rail-foot{padding:14px 10px 0;display:grid;gap:8px;font-size:12px;color:var(--muted)}
+.toggle-row{display:flex;align-items:center;gap:8px;cursor:pointer}
+
+.main{padding-block:22px 80px;padding-inline:24px;min-width:0;display:grid;gap:18px;align-content:start}
+.step-head{display:grid;gap:8px}
+.step-head .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.step-head h1{font-size:24px;letter-spacing:-.02em;font-weight:800}
+.step-head p{margin:0;color:var(--muted);max-width:64ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px;min-width:0}
+.card h3{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card .sub{margin:-8px 0 0;color:var(--muted);font-size:13px}
+.lockbar{display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);font-size:13px}
+.note{padding:10px 14px;border-radius:10px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+.note.info{background:var(--info-soft);color:var(--info)}
+.note.ok{background:var(--ok-soft);color:var(--ok)}
+.note.crit{background:var(--crit-soft);color:var(--crit)}
+.note b{font-weight:700}
+.note .grow{flex:1}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.field{display:grid;gap:5px;min-width:0}
+.field>span{font-size:12px;font-weight:700;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-size:14px;min-width:0}
+.field textarea{min-height:84px;resize:vertical;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.field input:disabled,.field select:disabled,.field textarea:disabled{opacity:.6;cursor:not-allowed}
+.field small{color:var(--muted);font-size:12px}
+.field input[type=color]{padding:3px;height:40px;cursor:pointer}
+.switch{position:relative;display:inline-block;width:36px;height:21px;flex:none}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:.15s;cursor:pointer}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:15px;height:15px;border-radius:50%;background:var(--surface);transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked+span{background:var(--accent)}
+.switch input:checked+span::after{transform:translateX(15px)}
+.switch input:disabled+span{opacity:.5;cursor:not-allowed}
+.switch input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.list{display:grid;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.li:last-child{border-bottom:0}
+.li .grow{flex:1;min-width:160px}
+.li .grow b{font-weight:600}
+.li .grow small{display:block;color:var(--muted);font-size:12px}
+.li.child{padding-left:36px;background:var(--surface-2)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;padding:3px;background:var(--surface-2);gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:7px;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg button:disabled{cursor:not-allowed}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.ph{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);display:grid}
+.ph .img{aspect-ratio:4/3;max-width:100%;background-size:cover;background-position:center;position:relative}
+.ph .img .tag{position:absolute;left:8px;top:8px}
+.ph .standin-img::after,.site .is-standin::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.28) 0 10px,transparent 10px 20px);pointer-events:none}
+.ph .cap{padding:9px 10px;display:grid;gap:6px}
+.ph .cap b{font-size:13px}
+.ph .acts{display:flex;gap:6px;flex-wrap:wrap}
+.file-btn{position:relative;overflow:hidden}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.file-btn input:disabled{cursor:not-allowed}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.linkbox{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:5px 8px;overflow-wrap:anywhere;width:100%}
+.score{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.score div{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;background:var(--surface-2)}
+.score b{display:block;font-size:22px;font-weight:800}
+.score small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.pipeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pipe{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2);display:grid;gap:3px}
+.pipe b{font-size:13px}
+.pipe small{color:var(--muted);font-size:12px}
+.pipe.done{background:var(--ok-soft);border-color:transparent}
+.pipe.done b{color:var(--ok)}
+.pipe.cur{border-color:var(--accent);background:var(--accent-soft)}
+.pipe.cur b{color:var(--accent)}
+.months{display:flex;flex-wrap:wrap;gap:6px}
+.months button{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:5px 9px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
+.months button.closed{background:var(--crit-soft);color:var(--crit);border-color:transparent}
+.footer-nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:6px}
+.step-select{display:none}
+.preview-toggle{display:none}
+.activity{display:grid;gap:6px;font-size:12.5px}
+.activity div{display:flex;gap:8px}
+.activity time{color:var(--muted);white-space:nowrap;min-width:86px;font-variant-numeric:tabular-nums}
+
+/* preview pane */
+.preview{position:sticky;top:calc(var(--top) + env(safe-area-inset-top,0px));height:calc(100vh - var(--top));display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--surface-2);border-left:1px solid var(--line);min-width:0}
+.pv-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.pv-bar .url{flex:1;min-width:140px;font-family:var(--f-mono);font-size:12px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv-scroll{overflow:auto;padding:16px}
+.pv-frame{margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line);max-width:100%}
+.pv-frame.phone{width:390px;border-radius:28px;border:8px solid #1a1f2b}
+.pv-status{font-family:var(--f-mono);font-size:11.5px;padding:7px 14px;border-top:1px solid var(--line);background:var(--surface);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:32px}
+.pv-status b{color:var(--ink);font-weight:500}
+
+.drawer{position:fixed;inset:0;z-index:80;display:flex;justify-content:flex-end;background:rgba(10,16,30,.38)}
+.drawer .panel{width:min(520px,100%);height:100%;overflow:auto;background:var(--surface);padding:24px;padding-right:max(24px,env(safe-area-inset-right,0px));padding-top:max(24px,env(safe-area-inset-top,0px));display:grid;gap:16px;align-content:start;box-shadow:var(--shadow)}
+.drawer h2{font-size:20px;font-weight:800}
+.drawer h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.drawer ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:90;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);max-width:min(560px,calc(100% - 32px));overflow-wrap:anywhere}
+
+@media (max-width:1240px){
+  .ws{grid-template-columns:230px minmax(0,1fr)}
+  .preview{position:fixed;top:0;right:0;bottom:0;height:auto;width:min(620px,100%);z-index:70;transform:translateX(105%);transition:transform .2s ease;box-shadow:var(--shadow);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .ws.show-preview .preview{transform:none}
+  .preview-toggle{display:inline-flex}
+  .pv-close{display:inline-flex!important}
+}
+@media (max-width:780px){
+  .ws{grid-template-columns:minmax(0,1fr)}
+  .rail{display:none}
+  .step-select{display:block}
+  .main{padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+  .grid2,.grid3{grid-template-columns:minmax(0,1fr)}
+  .score{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pipeline{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pv-frame.phone{width:100%;border-width:0;border-radius:10px}
+  .crumbs{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- generated park site (shared template, R11) ---------- */
+.site{--s-bg:#FFFFFF;--s-ink:#1E2624;--s-muted:#5E6966;--s-line:#E4E7E5;--s-soft:#F5F6F4;
+  container-type:inline-size;background:var(--s-bg);color:var(--s-ink);font-family:"Mulish",ui-sans-serif,system-ui,sans-serif;font-size:14px;line-height:1.55}
+.site h1,.site h2,.site h3{font-family:"DM Serif Display",Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:-.005em;color:var(--s-ink)}
+.site a{color:inherit;text-decoration:none}
+.site .s-util{background:var(--sp);color:#fff;font-size:11.5px;display:flex;justify-content:space-between;gap:10px;padding:6px 22px;flex-wrap:wrap}
+.site .s-util span{opacity:.92}
+.site .s-head{display:flex;align-items:center;gap:16px;padding:12px 22px;border-bottom:1px solid var(--s-line);background:var(--s-bg)}
+.site .s-logo{display:flex;align-items:center;gap:9px;min-width:0}
+.site .s-logo img{height:38px;width:auto;max-width:150px;object-fit:contain}
+.site .s-logo .nm{font-family:"DM Serif Display",Georgia,serif;font-size:19px;line-height:1;color:var(--sp)}
+.site .s-logo small{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--s-muted);margin-top:3px}
+.site .s-nav{display:flex;gap:16px;margin-left:auto;font-weight:700;font-size:12.5px;flex-wrap:wrap;justify-content:flex-end}
+.site .s-nav a:hover{color:var(--sp)}
+.site .s-burger{display:none;margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid var(--s-line);place-items:center}
+.site .s-btn{display:inline-flex;align-items:center;gap:6px;background:var(--sa);color:var(--sa-ink);font-weight:800;font-size:12.5px;padding:10px 16px;border-radius:999px;white-space:nowrap;cursor:pointer;border:0}
+.site .s-btn.alt{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
+.site .s-btn.pri{background:var(--sp);color:#fff}
+.site .s-btn.call{background:var(--s-soft);color:var(--s-ink);box-shadow:inset 0 0 0 1px var(--s-line)}
+.site .s-hero{position:relative;min-height:330px;display:flex;align-items:flex-end;background-size:cover;background-position:center;color:#fff}
+.site .s-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.55))}
+.site .s-hero .in{position:relative;z-index:1;padding:28px 22px;display:grid;gap:12px;max-width:560px}
+.site .s-hero h1{color:#fff;font-size:36px;line-height:1.05}
+.site .s-hero p{margin:0;opacity:.95;font-size:14.5px}
+.site .s-hero .ctas{display:flex;gap:10px;flex-wrap:wrap}
+.site .s-season{background:var(--s-soft);border-bottom:1px solid var(--s-line);padding:9px 22px;font-size:12.5px;font-weight:700;color:var(--s-muted)}
+.site .s-sec{padding:30px 22px;display:grid;gap:16px}
+.site .s-sec.tint{background:var(--sp-soft)}
+.site .s-sec h2{font-size:26px;line-height:1.1}
+.site .s-kicker{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:var(--sp)}
+.site .s-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.site .s-card{border:1px solid var(--s-line);border-radius:14px;overflow:hidden;background:var(--s-bg);display:grid;grid-template-rows:auto 1fr}
+.site .s-card .im{aspect-ratio:4/3;max-width:100%;background-size:cover;background-position:center;position:relative}
+.site .s-card .bd{padding:12px 13px 14px;display:grid;gap:7px;align-content:start}
+.site .s-card h3{font-size:18px}
+.site .s-card .price{font-size:12.5px;color:var(--s-muted)}
+.site .s-card .price b{color:var(--s-ink);font-size:15px}
+.site .s-card .s-btn{justify-self:start;margin-top:4px}
+.site .s-band{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:center;padding:30px 22px;background:var(--sp);color:#fff}
+.site .s-band h2{color:#fff;font-size:26px}
+.site .s-band p{margin:0;opacity:.92}
+.site .s-band .s-btn{background:#fff;color:var(--sp)}
+.site .s-events{display:grid;gap:8px}
+.site .s-ev{display:flex;gap:12px;align-items:center;border:1px solid var(--s-line);border-radius:12px;padding:10px 12px;background:var(--s-bg)}
+.site .s-ev .dt{width:46px;text-align:center;border-radius:9px;background:var(--sp-soft);color:var(--sp);padding:5px 0;font-weight:800;line-height:1.1;font-size:11px}
+.site .s-ev .dt b{display:block;font-size:18px}
+.site .s-map{border-radius:14px;overflow:hidden;border:1px solid var(--s-line);aspect-ratio:16/9;max-width:100%;background-size:cover;background-position:center;position:relative}
+.site .s-foot{background:#1B2422;color:#D7DEDB;padding:26px 22px;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;font-size:12.5px}
+.site .s-foot b{color:#fff;display:block;margin-bottom:6px}
+.site .s-foot a{display:block;opacity:.85;margin-bottom:3px}
+.site .s-foot .anth{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.12);padding-top:12px;font-size:11px;opacity:.7;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.site .standin{background-color:#D9DDDB;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.35) 0 10px,transparent 10px 20px)}
+.site .stand-tag,.ph .stand-tag{position:absolute;left:8px;top:8px;z-index:2;background:#FFD666;color:#4A3500;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:500;padding:2px 6px;border-radius:5px}
+.site .ph-text{background:#FFF3C4;color:#4A3500;border-radius:4px;padding:0 4px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7em;vertical-align:middle}
+.site [data-href]{cursor:pointer}
+@container (max-width:620px){
+  .site .s-nav{display:none}
+  .site .s-burger{display:grid}
+  .site .s-head .s-btn{display:none}
+  .site .s-hero h1{font-size:29px}
+  .site .s-band{grid-template-columns:1fr}
+  .site .s-foot{grid-template-columns:1fr}
+  .site .s-util{padding-inline:16px}
+  .site .s-head,.site .s-sec,.site .s-band,.site .s-foot,.site .s-season{padding-left:16px;padding-right:16px}
+  .site .s-hero .in{padding-inline:16px}
+}
+</style>
+
+<div id="app"></div>
+
+<script>
+(() => {
+/* ================= constants ================= */
+const TODAY = new Date('2026-10-26T12:00:00');
+const STORE_KEY = 'anthem-site-wizard-proto-v1';
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const ROLES = {
+  anthem:   {label:'Anthem team (Joe)', who:'Joe Critchlow', blurb:'Runs the wizard for any park, approves launch, adds users.'},
+  sagecreek:{label:'SageCreek (Melisa)', who:'Melisa', blurb:'Builds the template, reviews pre-fill, makes unique edits.'},
+  onsite:   {label:'On-site manager · Triple R', who:'Triple R on-site manager', blurb:'Edits their own park’s copy, photos, map and events.', park:'triple-r'}
+};
+
+const STEPS = [
+  {id:'diligence', stage:'Diligence', title:'Diligence packet', reqs:['R9'], auto:'Manual',
+   lede:'Everything Stage 1 needs, gathered while the park is under contract, so the build can start the day it closes.'},
+  {id:'intake', stage:'Intake', title:'Pre-fill from old site', reqs:['R7','R26','R27'], auto:'Human + AI',
+   lede:'The wizard read the old site, calendar and amenities. Approve, edit or reject each field before it reaches the new site.'},
+  {id:'pages', stage:'Stage 1', title:'Pages & copy', reqs:['R13','R11','R14','R17'], auto:'Human + AI',
+   lede:'Pick which sections of the standard sitemap this park uses. The structure, voice and fonts are shared across every Anthem park.'},
+  {id:'brand', stage:'Stage 1', title:'Brand', reqs:['R10','R11','R12'], auto:'Manual',
+   lede:'Each park gets its own colors and logo. Everything else in the brand guide stays shared, so the parks look like one family.'},
+  {id:'photos', stage:'Stage 1', title:'Photos', reqs:['R12','R4','R5'], auto:'Manual',
+   lede:'Upload photos for each section. Missing ones launch as stand-ins, and the wizard flags any still live after 30 days.'},
+  {id:'map', stage:'Stage 1', title:'Park map', reqs:['R15'], auto:'Human + AI',
+   lede:'Upload the park’s existing map. The wizard adds a branded overlay with the site types and amenities.'},
+  {id:'booking', stage:'Stage 1', title:'Booking links', reqs:['R18','R19','R20'], auto:'Manual',
+   lede:'Every booking button opens this park’s own booking page, filtered to the stay type, with no login screen.'},
+  {id:'pricing', stage:'Stage 1', title:'Pricing & stay types', reqs:['R2'], auto:'Human + AI',
+   lede:'Short-term nightly rates and long-term monthly rates, plus the months the park is closed.'},
+  {id:'domain', stage:'Stage 1', title:'Domain', reqs:['R23'], auto:'Manual',
+   lede:'Point the park’s domain at the new site. Old pages redirect so search rankings carry over.'},
+  {id:'launch', stage:'Review & launch', title:'Review & launch', reqs:['R8','R4','R5'], auto:'Human + AI',
+   lede:'Quality check, launch checklist, then a staged launch: QC preview, soft launch, live.'},
+  {id:'stage2', stage:'Stage 2', title:'Tracking & analytics', reqs:['R3'], auto:'Not rated',
+   lede:'Facebook Pixel, Google Analytics and ad tags, added after launch. Stage 2 discovery will set the details.'},
+  {id:'team', stage:'All stages', title:'Team & access', reqs:['R24'], auto:'Manual',
+   lede:'Who can edit this park. Each park has its own ops crew, and nobody sees another park’s admin.'}
+];
+const STAGE1 = ['pages','brand','photos','map','booking','pricing','domain'];
+
+/* Standard sitemap (Q2 still open: this follows the Lake Gaston Resort structure). */
+const PAGES = [
+  {id:'home', label:'Home', slug:'/', core:true, group:null},
+  {id:'rv', label:'RV sites', slug:'/stay/rv-sites', group:'Stay', unit:true, code:'RV', photo:'rv'},
+  {id:'cottages', label:'Cottages', slug:'/stay/cottages', group:'Stay', unit:true, code:'COT', photo:'cottages'},
+  {id:'rooms', label:'Waterfront rooms', slug:'/stay/waterfront-rooms', group:'Stay', unit:true, code:'WFR', photo:'rooms'},
+  {id:'tent', label:'Tent sites', slug:'/stay/tent-sites', group:'Stay', unit:true, code:'TENT', photo:'tent'},
+  {id:'longterm', label:'Long-term stays', slug:'/stay/long-term', group:'Stay'},
+  {id:'funcenter', label:'Fun center & bowling', slug:'/things-to-do/fun-center', group:'Things to do', photo:'funcenter'},
+  {id:'golf', label:'Golf', slug:'/things-to-do/golf', group:'Things to do', photo:'golf'},
+  {id:'marina', label:'Marina & boating', slug:'/things-to-do/marina', group:'Things to do', photo:'marina'},
+  {id:'beach', label:'Beach & pool', slug:'/things-to-do/beach-pool', group:'Things to do', photo:'beach'},
+  {id:'dining', label:'Dining', slug:'/dining', group:'Dining', photo:'dining'},
+  {id:'events', label:'Weddings & events', slug:'/weddings-events', group:'Events', photo:'events'},
+  {id:'calendar', label:'Events calendar', slug:'/events', group:'Events', notPlaced:true},
+  {id:'map', label:'Park map', slug:'/park-map', group:'Park map'},
+  {id:'contact', label:'Contact', slug:'/contact', core:true, group:'Contact'}
+];
+const NAV_ORDER = ['Stay','Things to do','Dining','Events','Park map','Contact'];
+const PHOTO_SLOTS = [
+  {id:'hero', label:'Home hero', page:'home', kind:'hero'},
+  {id:'rv', label:'RV sites', page:'rv', kind:'rv'},
+  {id:'cottages', label:'Cottages', page:'cottages', kind:'cabin'},
+  {id:'rooms', label:'Waterfront rooms', page:'rooms', kind:'rooms'},
+  {id:'tent', label:'Tent sites', page:'tent', kind:'tent'},
+  {id:'funcenter', label:'Fun center & bowling', page:'funcenter', kind:'bowling'},
+  {id:'golf', label:'Golf', page:'golf', kind:'golf'},
+  {id:'marina', label:'Marina', page:'marina', kind:'marina'},
+  {id:'beach', label:'Beach & pool', page:'beach', kind:'pool'},
+  {id:'dining', label:'Dining', page:'dining', kind:'dining'},
+  {id:'events', label:'Weddings & events', page:'events', kind:'events'}
+];
+const DILIGENCE = [
+  ['brand','Brand assets (logo files, any existing colors)'],
+  ['photos','Photography'],
+  ['booking','Booking account and property ID (Newbook or Campspot)'],
+  ['square','Square account for non-stay purchases'],
+  ['domain','Domain registrar and DNS owner'],
+  ['map','Existing park map'],
+  ['pricing','Rate sheet, short- and long-term'],
+  ['amenities','Amenities and site types'],
+  ['contracts','Stay contracts and rental waivers'],
+  ['calendar','Existing events calendar']
+];
+
+/* ================= helpers ================= */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const D = s => new Date(typeof s==='string' && s.length===10 ? s+'T12:00:00' : s);
+const days = (a,b) => Math.round((b - a)/86400000);
+const fmtDate = d => D(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const fmtDay = d => D(d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+const getPath = (o,p) => p.split('.').reduce((a,k)=>a==null?a:a[k], o);
+const setPath = (o,p,v) => { const ks=p.split('.'); const last=ks.pop(); const t=ks.reduce((a,k)=>a[k], o); t[last]=v; };
+function hexRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return [n>>16&255,n>>8&255,n&255];}
+function mix(a,b,t){const x=hexRgb(a),y=hexRgb(b);return '#'+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,'0')).join('');}
+function lum(h){const [r,g,b]=hexRgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b;}
+const inkOn = h => lum(h) > .42 ? '#1B1B16' : '#FFFFFF';
+const ICON = {
+  done:'<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="var(--ok)"/><path d="M5.3 9.3l2.4 2.4 5-5" fill="none" stroke="var(--surface)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  partial:'<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.2" fill="none" stroke="var(--warn)" stroke-width="1.6"/><path d="M9 1.8a7.2 7.2 0 0 1 0 14.4z" fill="var(--warn)"/></svg>',
+  todo:'<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.2" fill="none" stroke="var(--line)" stroke-width="1.6"/></svg>',
+  later:'<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.2" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="2.4 2.4"/></svg>',
+  lock:'<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>',
+  eye:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 8s2.6-5 7-5 7 5 7 5-2.6 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>',
+  up:'<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 12V3M4 7l4-4 4 4M2.5 14h11"/></svg>'
+};
+const REQS = r => r.map(x=>`<span class="req">${x}</span>`).join(' ');
+
+/* -------- generated "photos": simple illustrated scenes stand in for real park photography -------- */
+function scene(kind, p, a, mono){
+  if (mono){ p='#8C9592'; a='#B7BEBB'; }
+  const sky1 = mix(p,'#ffffff',.78), sky2 = mix(p,'#ffffff',.93), far = mix(p,'#ffffff',.5), near = mix(p,'#0b1210',.25), water = mix(p,'#ffffff',.35), sun = mix(a,'#ffffff',.25);
+  let fg = '';
+  const trees = (x0,n,base,h,c) => Array.from({length:n},(_,i)=>{const x=x0+i*22+(i%3)*5, hh=h+(i%4)*9;return `<path d="M${x} ${base}l11 -${hh}l11 ${hh}z" fill="${c}"/>`;}).join('');
+  const waterBand = `<rect x="0" y="168" width="400" height="72" fill="${water}"/><path d="M30 190h60M150 200h80M270 186h70M60 214h90M240 222h110" stroke="#ffffff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>`;
+  switch(kind){
+    case 'hero': fg = waterBand + trees(0,19,170,26,near) + `<path d="M210 186l40 0l-6 9h-30z" fill="#fff"/><path d="M228 186v-26l14 22z" fill="${a}"/>`; break;
+    case 'rv': fg = `<rect x="0" y="176" width="400" height="64" fill="${mix(p,'#7a8a52',.45)}"/>` + trees(0,18,178,22,near) + `<rect x="120" y="128" width="150" height="58" rx="12" fill="#fff"/><rect x="132" y="140" width="34" height="18" rx="3" fill="${far}"/><rect x="178" y="140" width="66" height="18" rx="3" fill="${far}"/><rect x="120" y="166" width="150" height="7" fill="${a}"/><circle cx="160" cy="190" r="11" fill="#263230"/><circle cx="234" cy="190" r="11" fill="#263230"/>`; break;
+    case 'cabin': fg = `<rect x="0" y="176" width="400" height="64" fill="${mix(p,'#7a8a52',.5)}"/>` + trees(0,18,178,30,near) + `<path d="M140 132l60 -40l60 40z" fill="${a}"/><rect x="152" y="132" width="96" height="58" fill="${mix(a,'#5b3b22',.55)}"/><rect x="190" y="152" width="22" height="38" fill="#2b221b"/><rect x="160" y="146" width="20" height="16" fill="${sky2}"/><rect x="220" y="146" width="20" height="16" fill="${sky2}"/>`; break;
+    case 'rooms': fg = waterBand + `<rect x="90" y="96" width="220" height="80" fill="#fff"/>` + Array.from({length:12},(_,i)=>`<rect x="${102+(i%6)*34}" y="${108+Math.floor(i/6)*32}" width="22" height="18" fill="${far}"/>`).join('') + `<rect x="90" y="88" width="220" height="10" fill="${a}"/>`; break;
+    case 'tent': fg = `<rect x="0" y="176" width="400" height="64" fill="${mix(p,'#7a8a52',.5)}"/>` + trees(0,18,178,34,near) + `<path d="M150 192l50 -70l50 70z" fill="${a}"/><path d="M200 122l-12 70h24z" fill="${mix(a,'#000',.3)}"/><circle cx="300" cy="196" r="10" fill="#e8873a"/>`; break;
+    case 'bowling': fg = `<rect x="0" y="0" width="400" height="240" fill="${mix(p,'#0b1210',.55)}"/><path d="M120 240l60 -150h40l60 150z" fill="${mix(a,'#c99a5b',.4)}"/>` + [0,1,2,3].map(i=>`<ellipse cx="${178+i*15}" cy="${104+(i%2)*3}" rx="6" ry="13" fill="#fff"/>`).join('') + `<circle cx="210" cy="200" r="20" fill="${p}"/>`; return wrap(fg);
+    case 'golf': fg = `<rect x="0" y="150" width="400" height="90" fill="${mix(p,'#5f9a4a',.55)}"/>` + trees(0,18,152,22,near) + `<ellipse cx="220" cy="196" rx="90" ry="20" fill="${mix(p,'#8fcf6a',.4)}"/><rect x="236" y="112" width="3" height="82" fill="#333"/><path d="M239 112l34 11l-34 11z" fill="${a}"/><ellipse cx="238" cy="194" rx="7" ry="3" fill="#222"/>`; break;
+    case 'marina': fg = waterBand + trees(0,19,170,20,near) + `<rect x="40" y="200" width="320" height="8" fill="${mix(a,'#6b4b2e',.5)}"/>` + [0,1,2].map(i=>`<path d="M${80+i*100} 196h56l-8 12h-40z" fill="#fff"/><path d="M${100+i*100} 196v-36l18 32z" fill="${i===1?a:'#fff'}"/>`).join(''); break;
+    case 'pool': fg = `<rect x="0" y="150" width="400" height="90" fill="#efe6d6"/><rect x="70" y="160" width="260" height="66" rx="10" fill="${mix(p,'#3fb4d8',.6)}"/><path d="M90 186q20 -8 40 0t40 0t40 0t40 0t40 0" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3"/><path d="M60 150l8 -60M76 150l-8 -60" stroke="${a}" stroke-width="4"/><path d="M30 92q38 -30 76 0z" fill="${a}"/>`; break;
+    case 'dining': fg = `<rect x="0" y="0" width="400" height="240" fill="${mix(a,'#2a1c12',.7)}"/><circle cx="200" cy="140" r="58" fill="#fff"/><circle cx="200" cy="140" r="40" fill="${mix(a,'#fff',.6)}"/><path d="M118 92v96M108 92v28a10 10 0 0 0 20 0v-28M282 92q14 30 0 56v40" stroke="#e8e2d8" stroke-width="5" fill="none" stroke-linecap="round"/>`; return wrap(fg);
+    case 'events': fg = `<rect x="0" y="176" width="400" height="64" fill="${mix(p,'#7a8a52',.5)}"/>` + trees(0,18,178,30,near) + `<path d="M10 70q190 70 380 0" fill="none" stroke="#444" stroke-width="1.5"/>` + Array.from({length:13},(_,i)=>{const x=20+i*29;const y=70+Math.sin(i/12*Math.PI)*34;return `<circle cx="${x}" cy="${y+4}" r="4.5" fill="${sun}"/>`;}).join('') + `<path d="M120 190l80 -60l80 60z" fill="#fff"/><rect x="132" y="168" width="136" height="22" fill="#fff"/>`; break;
+  }
+  return wrap(fg);
+  function wrap(inner){
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky1}"/><stop offset="1" stop-color="${sky2}"/></linearGradient></defs><rect width="400" height="240" fill="url(#g)"/><circle cx="318" cy="62" r="24" fill="${sun}"/><path d="M0 150q60 -46 120 -18t130 -16t150 22v80h-400z" fill="${far}"/>${inner}</svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+}
+function mapSvg(p, a, style){
+  const land = style==='satellite' ? '#5D7550' : mix(p,'#ffffff',.88);
+  const road = style==='satellite' ? '#C9C2B0' : '#ffffff';
+  const water = style==='satellite' ? '#2F5C73' : mix(p,'#ffffff',.55);
+  const site = style==='simple' ? '#9aa39f' : p;
+  const pins = [['Office',250,70],['Pool',300,150],['Marina',120,200],['Fun center',360,90]].map(([t,x,y])=>`<g><circle cx="${x}" cy="${y}" r="11" fill="${a}" stroke="#fff" stroke-width="3"/><text x="${x+16}" y="${y+4}" font-family="Mulish,Arial" font-size="12" font-weight="800" fill="${style==='satellite'?'#fff':'#1e2624'}">${t}</text></g>`).join('');
+  const sites = Array.from({length:22},(_,i)=>{const t=i/22*Math.PI*2;const x=270+Math.cos(t)*110, y=135+Math.sin(t)*72;return `<rect x="${x-5}" y="${y-4}" width="10" height="8" rx="2" fill="${site}" transform="rotate(${t*57.3} ${x} ${y})"/>`;}).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270"><rect width="480" height="270" fill="${land}"/><path d="M0 0h130q40 60 10 120t-30 150h-110z" fill="${water}"/><ellipse cx="270" cy="135" rx="124" ry="86" fill="none" stroke="${road}" stroke-width="12"/><path d="M146 135h-40" stroke="${road}" stroke-width="12"/>${sites}${style==='simple'?'':pins}<g transform="translate(330 232)"><rect width="140" height="28" rx="6" fill="#fff" fill-opacity=".92"/><rect x="10" y="10" width="10" height="8" rx="2" fill="${site}"/><text x="26" y="18" font-family="Mulish,Arial" font-size="11" fill="#1e2624">Sites</text><circle cx="76" cy="14" r="5" fill="${a}"/><text x="86" y="18" font-family="Mulish,Arial" font-size="11" fill="#1e2624">Amenities</text></g></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+/* ================= sample data ================= */
+function basePark(id, name){
+  return {
+    id, name, sample:true, location:'', closedOn:null, platform:'newbook',
+    brand:{primary:'#2D5E4C', accent:'#E3A23B', logoText:name, logoData:null},
+    pages:Object.fromEntries(PAGES.map(pg=>[pg.id, !!pg.core])),
+    copy:{headline:'', intro:''},
+    photos:Object.fromEntries(PHOTO_SLOTS.map(s=>[s.id, null])),
+    booking:{propertyId:'', campspotSlug:'', phone:'', eventsPhone:'', square:{bowling:{mode:'call',link:''}, golf:{mode:'call',link:''}, daypass:{mode:'call',link:''}, boats:{mode:'call',link:''}}},
+    pricing:{showPrices:true, units:{rv:{night:'',month:''}, cottages:{night:'',month:''}, rooms:{night:'',month:''}, tent:{night:'',month:''}}, closed:[]},
+    domain:{name:'', registrar:'', dnsOwner:'', owner:false, dns:false, ssl:false, redirects:false},
+    diligence:Object.fromEntries(DILIGENCE.map(([k])=>[k,{status:'missing', owner:'Anthem acquisitions'}])),
+    intake:{oldUrl:'', archived:null, fields:[], score:null},
+    map:{uploaded:false, upload:null, style:'branded', overlay:'none'},
+    launch:{stage:'draft', liveOn:null, approvedBy:null},
+    stage2:{pixel:'', ga:'', gads:''},
+    team:[{name:'Joe Critchlow', role:'Anthem', scope:'All parks'},{name:'Adam Long', role:'Anthem', scope:'All parks'},{name:'Melisa', role:'SageCreek', scope:'All parks'}],
+    activity:[]
+  };
+}
+function seed(){
+  const P = {};
+
+  // Lake Gaston Resort: the live reference site. Facts kept to what the project has on record; contact details are dummy.
+  const lgr = basePark('lgr','Lake Gaston Resort');
+  Object.assign(lgr, {sample:false, location:'Gasburg, VA', closedOn:null, platform:'newbook'});
+  lgr.brand = {primary:'#1F4E6B', accent:'#E9B44C', logoText:'Lake Gaston Resort', logoData:null};
+  ['rv','cottages','rooms','longterm','funcenter','golf','marina','beach','dining','events','map'].forEach(k=>lgr.pages[k]=true);
+  lgr.copy = {headline:'It’s a great day at Lake Gaston', intro:'RV sites, cottages and waterfront rooms on 20,000 acres of lake, with a private beach, marina, bowling and more.'};
+  PHOTO_SLOTS.forEach(s=>lgr.photos[s.id]={src:'scene'});
+  lgr.booking = {propertyId:'lakegaston', campspotSlug:'', phone:'(555) 010-2721', eventsPhone:'(555) 010-2722', square:{bowling:{mode:'call',link:''}, golf:{mode:'square',link:'https://square.link/u/LGR-GOLF'}, daypass:{mode:'square',link:'https://square.link/u/LGR-DAY'}, boats:{mode:'call',link:''}}};
+  lgr.pricing.units = {rv:{night:'58',month:'720'}, cottages:{night:'149',month:''}, rooms:{night:'129',month:''}, tent:{night:'',month:''}};
+  lgr.domain = {name:'lakegastonresort.com', registrar:'Recorded by Anthem', dnsOwner:'Anthem', owner:true, dns:true, ssl:true, redirects:true};
+  Object.keys(lgr.diligence).forEach(k=>lgr.diligence[k]={status:'received', owner:'Anthem'});
+  lgr.intake = {oldUrl:'lakegastonresort.com (old site)', archived:'2026-10-09', fields:[], score:null};
+  lgr.map = {uploaded:true, upload:null, style:'branded', overlay:'ready'};
+  lgr.launch = {stage:'live', liveOn:'2026-10-17', approvedBy:'Adam Long'};
+  lgr.team.push({name:'Amos Oveson', role:'On-site manager', scope:'Lake Gaston Resort'});
+  P.lgr = lgr;
+
+  // Triple R: the test park from the acceptance examples. All details below are sample data.
+  const rrr = basePark('triple-r','Triple R');
+  Object.assign(rrr, {location:'Sample location', closedOn:'2026-10-19', platform:'newbook'});
+  rrr.brand = {primary:'#7A3B26', accent:'#E8B04A', logoText:'Triple R', logoData:null};
+  ['rv','cottages','tent','longterm','funcenter','beach','events','calendar','map'].forEach(k=>rrr.pages[k]=true);
+  rrr.copy = {headline:'Big sky, quiet sites, and room to roam', intro:'RV sites, cottages and tent sites with a pool, fun center and plenty of space for the whole crew.'};
+  rrr.photos.hero = {src:'scene'}; rrr.photos.rv = {src:'scene'}; rrr.photos.beach = {src:'scene'};
+  rrr.booking = {propertyId:'triple-r', campspotSlug:'', phone:'(555) 010-4410', eventsPhone:'', square:{bowling:{mode:'square',link:'https://square.link/u/RRR-LANES'}, golf:{mode:'call',link:''}, daypass:{mode:'call',link:''}, boats:{mode:'call',link:''}}};
+  rrr.pricing.units = {rv:{night:'52',month:'690'}, cottages:{night:'',month:''}, rooms:{night:'',month:''}, tent:{night:'34',month:''}};
+  rrr.pricing.closed = [];
+  rrr.domain = {name:'triplerresort.example', registrar:'', dnsOwner:'', owner:false, dns:false, ssl:false, redirects:false};
+  rrr.diligence = {brand:{status:'received',owner:'Joe'}, photos:{status:'requested',owner:'Park manager'}, booking:{status:'received',owner:'Alicia'}, square:{status:'received',owner:'Alicia'}, domain:{status:'requested',owner:'Joe'}, map:{status:'received',owner:'Park manager'}, pricing:{status:'received',owner:'Joe'}, amenities:{status:'received',owner:'Pre-fill'}, contracts:{status:'missing',owner:'Joe (Q8)'}, calendar:{status:'received',owner:'Park manager'}};
+  rrr.intake = {oldUrl:'triple-r-old.example', archived:'2026-10-21', score:{traffic:'C',ads:'D',social:'C',seo:'D',geo:'F'}, fields:[
+    {label:'Park name', value:'Triple R RV Resort', source:'Old site header', state:'edited', final:'Triple R'},
+    {label:'Phone', value:'(555) 010-4410', source:'Old site footer', state:'approved'},
+    {label:'Address', value:'Sample address, Sample county', source:'Old site contact page', state:'approved'},
+    {label:'Site types', value:'RV sites (54), Cottages (8), Tent sites (12)', source:'Newbook categories', state:'approved'},
+    {label:'Amenities', value:'Pool, fun center with 6 lanes, playground, camp store, pavilion', source:'Old site amenities page', state:'pending'},
+    {label:'Season', value:'Open year-round', source:'Old site FAQ (2019)', state:'pending'},
+    {label:'Check-in / out', value:'2:00 pm / 11:00 am', source:'Old site FAQ', state:'pending'},
+    {label:'Upcoming events', value:'6 events found (Fall chili cook-off, Trunk or treat, …)', source:'Old calendar export', state:'approved'},
+    {label:'Wedding packages', value:'"Book your wedding online"', source:'Old site', state:'rejected', note:'Events are call-in only'}
+  ]};
+  rrr.map = {uploaded:true, upload:null, style:'branded', overlay:'none'};
+  rrr.team.push({name:'Sample on-site manager', role:'On-site manager', scope:'Triple R'});
+  rrr.activity = [
+    {who:'Joe Critchlow', what:'Picked pages and wrote home copy', when:'2026-10-19T15:10'},
+    {who:'Melisa', what:'Reviewed 6 of 9 pre-filled fields', when:'2026-10-21T17:30'},
+    {who:'Joe Critchlow', what:'Entered RV and tent rates', when:'2026-10-22T14:05'},
+    {who:'Joe Critchlow', what:'Uploaded 3 photos, left at Photos', when:'2026-10-23T16:40'}
+  ];
+  P['triple-r'] = rrr;
+
+  // Beaver Meadows: on Campspot today. Everything else is sample data.
+  const bm = basePark('beaver','Beaver Meadows');
+  Object.assign(bm, {location:'Sample location', closedOn:null, platform:'campspot'});
+  bm.brand = {primary:'#35553A', accent:'#D9783A', logoText:'Beaver Meadows', logoData:null};
+  ['rv','cottages','tent','beach','events','map'].forEach(k=>bm.pages[k]=true);
+  bm.booking.campspotSlug = 'beaver-meadows';
+  bm.diligence.brand.status='received'; bm.diligence.booking={status:'received',owner:'Joe'}; bm.diligence.photos.status='requested'; bm.diligence.amenities.status='received';
+  bm.intake = {oldUrl:'beaver-meadows-old.example', archived:null, fields:[], score:null};
+  P.beaver = bm;
+
+  // Two fictional parks to show the portfolio view and the 30-day alert (R5).
+  const cb = basePark('cedar','Cedar Bluff RV Resort');
+  Object.assign(cb, {location:'Fictional sample park', closedOn:'2026-09-12', platform:'newbook'});
+  cb.brand = {primary:'#3C4F7A', accent:'#F0C35A', logoText:'Cedar Bluff', logoData:null};
+  ['rv','cottages','beach','dining','map'].forEach(k=>cb.pages[k]=true);
+  cb.copy = {headline:'Your spot on the bluff', intro:'Shaded RV sites and cottages above the river.'};
+  cb.photos.hero={src:'scene'}; cb.photos.rv={src:'scene'};
+  cb.booking.propertyId='cedar-bluff'; cb.booking.phone='(555) 010-8800';
+  cb.pricing.units.rv={night:'49',month:'640'}; cb.pricing.units.cottages={night:'119',month:''};
+  cb.domain={name:'cedarbluff.example',registrar:'Sample',dnsOwner:'Anthem',owner:true,dns:true,ssl:true,redirects:true};
+  Object.keys(cb.diligence).forEach(k=>cb.diligence[k]={status:'received',owner:'Anthem'});
+  cb.map={uploaded:true,upload:null,style:'branded',overlay:'ready'};
+  cb.launch={stage:'live', liveOn:'2026-09-25', approvedBy:'Adam Long'};
+  P.cedar = cb;
+
+  const wb = basePark('willow','Willow Bend Campground');
+  Object.assign(wb, {location:'Fictional sample park', closedOn:null, platform:'newbook'});
+  wb.brand = {primary:'#4F6B2F', accent:'#E58E4F', logoText:'Willow Bend', logoData:null};
+  wb.diligence.amenities.status='requested'; wb.diligence.brand.status='requested';
+  P.willow = wb;
+
+  return {
+    v:1, role:'anthem', view:'parks', parkId:'triple-r', step:'photos', device:'desktop', showTags:true,
+    parks:P, order:['lgr','triple-r','cedar','beaver','willow'],
+    lastPlace:{parkId:'triple-r', step:'photos', who:'Joe Critchlow', when:'2026-10-23T16:40'},
+    savedAt:null
+  };
+}
+
+/* ================= state ================= */
+let S;
+try { S = JSON.parse(localStorage.getItem(STORE_KEY)); } catch(e) { S = null; }
+if (!S || S.v !== 1) S = seed();
+let ui = {showPreview:false, notes:false, toast:null, hover:null, newName:'', newPlatform:'newbook'};
+let saveTimer;
+function save(){
+  S.savedAt = new Date().toISOString();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch(e) {} }, 250);
+  const el = document.getElementById('saved'); if (el) el.innerHTML = savedLabel();
+}
+function savedLabel(){ return `<i></i>${S.savedAt ? 'All changes saved' : 'Saved'}`; }
+const park = () => S.parks[S.parkId];
+function logActivity(what){
+  const p = park(); const who = ROLES[S.role].who;
+  const last = p.activity[p.activity.length-1];
+  const now = new Date().toISOString();
+  if (last && last.who===who && last.what===what) last.when = now; else p.activity.push({who, what, when:now});
+  if (p.activity.length > 30) p.activity.shift();
+  S.lastPlace = {parkId:p.id, step:S.step, who, when:now};
+}
+
+/* ================= permissions (R24) ================= */
+function canEdit(stepId){
+  if (S.role==='onsite') return ['photos','map','pages'].includes(stepId);
+  return true;
+}
+const canApproveLaunch = () => S.role==='anthem';
+function visibleParks(){
+  if (S.role==='onsite') return ['triple-r'];
+  return S.order;
+}
+
+/* ================= computed ================= */
+const on = (p,id) => !!p.pages[id];
+const units = p => PAGES.filter(pg=>pg.unit && on(p,pg.id));
+function usedSlots(p){ return PHOTO_SLOTS.filter(s=>on(p,s.page)); }
+function placeholders(p){
+  const list = usedSlots(p).filter(s=>!p.photos[s.id]).map(s=>s.label);
+  if (on(p,'map') && !(p.map.uploaded && p.map.overlay==='ready')) list.push('Park map');
+  if (!p.copy.headline.trim()) list.push('Home headline');
+  if (!p.copy.intro.trim()) list.push('Home intro');
+  return list;
+}
+function deepLink(p, unit){
+  const code = unit ? unit.code : '';
+  if (p.platform==='campspot') return `https://www.campspot.com/book/${p.booking.campspotSlug||'park-slug'}${code?`?siteType=${code}`:''}`;
+  return `https://book.newbook.cloud/${p.booking.propertyId||'property-id'}/availability${code?`?category=${code}`:''}`;
+}
+function bookingReady(p){ return p.platform==='campspot' ? !!p.booking.campspotSlug : !!p.booking.propertyId; }
+function stepStatus(p, id){
+  switch(id){
+    case 'diligence': { const v=Object.values(p.diligence); const r=v.filter(x=>x.status==='received').length; return r===v.length?'done':r?'partial':'todo'; }
+    case 'intake': { const f=p.intake.fields; if (p.launch.stage==='live' && !f.length) return 'done'; if(!f.length) return 'todo'; return f.some(x=>x.state==='pending')?'partial':'done'; }
+    case 'pages': return p.copy.headline.trim() && p.copy.intro.trim() ? 'done' : (p.copy.headline.trim()||p.copy.intro.trim())?'partial':'todo';
+    case 'brand': return p.brand.logoText.trim() && p.brand.primary && p.brand.accent ? 'done' : 'todo';
+    case 'photos': { const u=usedSlots(p); const have=u.filter(s=>p.photos[s.id]).length; return have===u.length?'done':have?'partial':'todo'; }
+    case 'map': if(!on(p,'map')) return 'done'; return p.map.uploaded && p.map.overlay==='ready' ? 'done' : p.map.uploaded ? 'partial':'todo';
+    case 'booking': { if(!bookingReady(p)) return 'todo'; const needPhone = !p.booking.phone || (on(p,'events') && !p.booking.eventsPhone); return needPhone?'partial':'done'; }
+    case 'pricing': { if(!p.pricing.showPrices) return 'done'; const u=units(p); const have=u.filter(x=>p.pricing.units[x.id].night).length; return u.length&&have===u.length?'done':have?'partial':'todo'; }
+    case 'domain': { const d=p.domain; const n=[d.owner,d.dns,d.ssl,d.redirects].filter(Boolean).length; return n===4?'done':n?'partial':'todo'; }
+    case 'launch': return p.launch.stage==='live'?'done':p.launch.stage==='draft'?'todo':'partial';
+    case 'stage2': return 'later';
+    case 'team': return 'done';
+  }
+}
+function stage1Pct(p){
+  const v = {done:1, partial:.5, todo:0};
+  return Math.round(STAGE1.reduce((a,id)=>a+v[stepStatus(p,id)],0)/STAGE1.length*100);
+}
+function parkStatus(p){
+  if (p.launch.stage==='live') return {label:'Live', cls:'ok'};
+  if (p.launch.stage==='preview' || p.launch.stage==='soft') return {label: p.launch.stage==='soft'?'Soft launch':'QC preview', cls:'info'};
+  if (!p.closedOn) return {label:'Under contract', cls:''};
+  return {label:'Building', cls:'accent'};
+}
+function checks(p){
+  const c = [];
+  const add = (ok, level, text, step) => c.push({ok, level, text, step});
+  add(stepStatus(p,'intake')==='done', 'block', 'Pre-fill run and every field reviewed', 'intake');
+  add(stepStatus(p,'brand')==='done', 'block', 'Logo and park colors set', 'brand');
+  add(!!p.copy.headline.trim(), 'block', 'Home page headline written', 'pages');
+  add(bookingReady(p), 'block', `${p.platform==='campspot'?'Campspot':'Newbook'} account connected, deep link for every stay type`, 'booking');
+  add(!!p.booking.phone, 'block', 'Reservations phone number set for call-in fallbacks', 'booking');
+  if (on(p,'events')) add(!!p.booking.eventsPhone, 'block', 'Events phone set (weddings and events are call-in only)', 'booking');
+  add(stepStatus(p,'pricing')==='done', 'warn', 'Rates for every stay type (or prices hidden)', 'pricing');
+  const ph = usedSlots(p).filter(s=>!p.photos[s.id]).length;
+  add(ph===0, 'warn', ph ? `${ph} section${ph>1?'s':''} will launch with stand-in photos` : 'Real photos in every section', 'photos');
+  if (on(p,'map')) add(p.map.overlay==='ready', 'warn', 'Branded park map ready', 'map');
+  add(p.domain.dns && p.domain.ssl, 'live', 'Domain pointed and SSL issued (needed for Live only)', 'domain');
+  add(p.domain.redirects, 'live', 'Old-site redirects in place', 'domain');
+  return c;
+}
+
+/* ================= render ================= */
+const app = document.getElementById('app');
+function render(){
+  document.body.classList.toggle('hide-tags', !S.showTags);
+  if (S.role==='onsite' && S.parkId!=='triple-r') S.parkId='triple-r';
+  app.innerHTML = topbar() + (S.view==='parks' ? parksView() : workspace()) + (ui.notes?notesDrawer():'') + (ui.toast?`<div class="toast" role="status">${ui.toast}</div>`:'');
+}
+function topbar(){
+  const p = S.view==='park' ? park() : null;
+  return `<header class="topbar gutter">
+    <button class="logo" data-act="home" aria-label="All parks">
+      <svg width="26" height="26" viewBox="0 0 26 26"><rect width="26" height="26" rx="7" fill="var(--accent)"/><path d="M5 19l8-12 8 12" fill="none" stroke="var(--accent-ink)" stroke-width="2.4" stroke-linejoin="round"/><path d="M9.5 15h7" stroke="var(--accent-ink)" stroke-width="2.4"/></svg>
+      Anthem Site Wizard</button>
+    <span class="proto">Prototype · sample data</span>
+    ${p?`<nav class="crumbs"><span>/</span><button class="btn ghost small" data-act="home">Parks</button><span>/</span><b>${esc(p.name)}</b></nav>`:''}
+    <div class="top-right">
+      <span class="saved" id="saved">${savedLabel()}</span>
+      <label class="role">Viewing as
+        <select id="role-select" data-act="role">${Object.entries(ROLES).map(([k,r])=>`<option value="${k}" ${S.role===k?'selected':''}>${r.label}</option>`).join('')}</select>
+      </label>
+      <button class="btn small" data-act="notes">Prototype notes</button>
+    </div>
+  </header>`;
+}
+
+/* ---------- parks dashboard ---------- */
+function parksView(){
+  const ids = visibleParks();
+  const alerts = [];
+  ids.forEach(id=>{
+    const p=S.parks[id];
+    if (p.launch.stage==='live'){
+      const d = days(D(p.launch.liveOn), TODAY);
+      const ph = placeholders(p);
+      if (ph.length && d>=30) alerts.push({cls:'crit', park:p, step:'photos', text:`<b>${esc(p.name)}</b> has had ${ph.length} stand-in item${ph.length>1?'s':''} live for ${d} days: ${esc(ph.join(', '))}.`, req:'R5', btn:'Replace stand-ins'});
+    } else if (p.closedOn){
+      const d = days(D(p.closedOn), TODAY);
+      const open = STAGE1.filter(s=>stepStatus(p,s)!=='done').length;
+      alerts.push({cls: d>10?'crit':'', park:p, step: STAGE1.find(s=>stepStatus(p,s)!=='done')||'launch', text:`<b>${esc(p.name)}</b> is on day ${d} of the 14-day launch target with ${open} Stage 1 step${open===1?'':'s'} open.`, req:'G1', btn:'Continue'});
+    }
+    if (p.domain && p.closedOn && p.launch.stage!=='live' && !p.domain.dnsOwner) alerts.push({cls:'', park:p, step:'domain', text:`<b>${esc(p.name)}</b>: nobody is recorded as the DNS owner for ${esc(p.domain.name||'the domain')}. Launch needs them to add records.`, req:'R23', btn:'Open domain'});
+  });
+  const lp = S.lastPlace; const lpPark = lp && S.parks[lp.parkId];
+  const resume = lpPark && ids.includes(lp.parkId) ? `<div class="banner resume">
+      <div class="grow"><div class="eyebrow">Pick up where you left off</div>
+      <div><b>${esc(lp.who)}</b> left <b>${esc(lpPark.name)}</b> at <b>${esc(STEPS.find(s=>s.id===lp.step)?.title)}</b> on ${fmtDay(lp.when)}. Everything entered so far is saved. <span class="req">R1</span></div></div>
+      <button class="btn primary" data-act="open" data-park="${lp.parkId}" data-step="${lp.step}">Resume</button></div>` : '';
+  const rows = ids.map(id=>{
+    const p=S.parks[id], st=parkStatus(p), pct=stage1Pct(p);
+    let timing = '<span class="muted">Not closed yet</span>';
+    if (p.launch.stage==='live') timing = `Live ${fmtDate(p.launch.liveOn)}${p.closedOn?` <span class="muted">· ${days(D(p.closedOn), D(p.launch.liveOn))} days after closing</span>`:''}`;
+    else if (p.closedOn){ const d=days(D(p.closedOn),TODAY); timing = `<span class="chip ${d>14?'crit':d>10?'warn':'accent'}">Day ${d} of 14</span>`; }
+    const ph = placeholders(p).length;
+    return `<tr data-act="open" data-park="${id}" tabindex="0">
+      <td><div class="pname"><span class="swatch" style="background:${p.brand.primary};color:${inkOn(p.brand.primary)}">${esc(p.brand.logoText.slice(0,2).toUpperCase())}</span><div><b>${esc(p.name)}</b><small>${esc(p.location)}${p.sample?' · sample':''}${id==='lgr'?' · reference site':''}</small></div></div></td>
+      <td><span class="chip ${st.cls}">${st.label}</span></td>
+      <td><div class="prog"><div class="track"><div class="fill" style="width:${pct}%"></div></div><span>${pct}%</span></div></td>
+      <td>${timing}</td>
+      <td>${p.platform==='campspot'?'Campspot':'Newbook'}</td>
+      <td>${ph?`<span class="chip warn">${ph} stand-in${ph>1?'s':''}</span>`:'<span class="chip ok">None</span>'}</td>
+    </tr>`;
+  }).join('');
+  return `<main class="page gutter">
+    <div class="page-head">
+      <div><div class="eyebrow">Anthem Destinations · ${ids.length} park${ids.length>1?'s':''}</div><h1>Park sites</h1>
+      <p>Each park moves from diligence to a live site on the shared template. Target: live within 14 days of closing.</p></div>
+      ${S.role==='onsite'?'':`<button class="btn" data-act="toggle-tags">${S.showTags?'Hide':'Show'} requirement tags</button>`}
+    </div>
+    ${resume}
+    ${alerts.length?`<section class="alerts" aria-label="Needs attention">${alerts.map(a=>`<div class="alert ${a.cls}"><span class="bar"></span><div class="grow">${a.text} <span class="req">${a.req}</span></div><button class="btn small" data-act="open" data-park="${a.park.id}" data-step="${a.step}">${a.btn}</button></div>`).join('')}</section>`:''}
+    <div class="tbl-wrap"><table class="parks">
+      <thead><tr><th>Park</th><th>Status</th><th>Stage 1 progress</th><th>Launch timing</th><th>Booking</th><th>Stand-ins live</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    ${S.role==='onsite'?`<div class="lockbar">${ICON.lock} On-site managers only see their own park. <span class="req">R24</span></div>`:`
+    <form class="new-park" data-form="new-park">
+      <label class="field"><span>Add a park under contract</span><input id="new-name" placeholder="Park name" value="${esc(ui.newName)}" data-ui="newName"></label>
+      <label class="field" style="max-width:220px;min-width:160px"><span>Booking platform</span><select id="new-platform" data-ui="newPlatform"><option value="newbook" ${ui.newPlatform==='newbook'?'selected':''}>Newbook</option><option value="campspot" ${ui.newPlatform==='campspot'?'selected':''}>Campspot</option></select></label>
+      <button class="btn primary" type="submit">Start diligence packet</button>
+      <span class="req">R9</span>
+    </form>`}
+  </main>`;
+}
+
+/* ---------- workspace ---------- */
+function workspace(){
+  const p = park(); const step = STEPS.find(s=>s.id===S.step) || STEPS[0];
+  let lastStage = '';
+  const rail = STEPS.map(s=>{
+    const head = s.stage!==lastStage ? `<div class="stage-label">${s.stage}</div>` : ''; lastStage = s.stage;
+    const st = stepStatus(p,s.id);
+    return head + `<button class="step ${s.id===S.step?'on':''}" data-act="step" data-step="${s.id}" aria-current="${s.id===S.step?'step':'false'}"><span class="st">${ICON[st]}</span><span class="t">${s.title}</span>${canEdit(s.id)||s.id==='pages'&&S.role==='onsite'?'':`<span class="lockic">${ICON.lock}</span>`}</button>`;
+  }).join('');
+  const st = parkStatus(p), pct = stage1Pct(p);
+  const dayChip = p.launch.stage==='live' ? `Live since ${fmtDate(p.launch.liveOn)}` : p.closedOn ? `Day ${days(D(p.closedOn),TODAY)} of 14` : 'Under contract';
+  const last = p.activity[p.activity.length-1];
+  return `<div class="ws ${ui.showPreview?'show-preview':''}">
+    <aside class="rail" aria-label="Wizard steps">
+      <div class="park-card">
+        <div class="row"><span class="chip ${st.cls}">${st.label}</span><span>${dayChip}</span></div>
+        <h2>${esc(p.name)}</h2>
+        <div class="prog"><div class="track"><div class="fill" style="width:${pct}%"></div></div><span>${pct}%</span></div>
+        <div class="row"><span>Stage 1 complete</span><span>${p.platform==='campspot'?'Campspot':'Newbook'}</span></div>
+      </div>
+      ${rail}
+      <div class="rail-foot">
+        <label class="toggle-row"><span class="switch"><input type="checkbox" id="tags-toggle" data-act="toggle-tags" ${S.showTags?'checked':''}><span></span></span>Show requirement tags</label>
+        ${last?`<span>Last edit: ${esc(last.who)}, ${fmtDay(last.when)}</span>`:''}
+      </div>
+    </aside>
+    <main class="main">
+      <select class="step-select" id="step-select" data-act="step-select" aria-label="Wizard step" style="padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)">
+        ${STEPS.map(s=>`<option value="${s.id}" ${s.id===S.step?'selected':''}>${s.stage} · ${s.title}</option>`).join('')}
+      </select>
+      <div class="step-head">
+        <div class="meta"><span class="eyebrow">${step.stage}</span>
+          <span class="chip" title="Automation level is proposed. Bob, Melisa and Connor still owe the client this rating (Q4).">Proposed: ${step.auto}</span>
+          ${REQS(step.reqs)}
+          <span style="margin-left:auto"></span>
+          <button class="btn small preview-toggle" data-act="preview-open">${ICON.eye} Preview site</button>
+        </div>
+        <h1>${step.title}</h1>
+        <p>${step.lede}</p>
+      </div>
+      ${!canEdit(step.id) && !(step.id==='pages' && S.role==='onsite') ? `<div class="lockbar">${ICON.lock} View only for on-site managers. Ask the Anthem team to change this step. <span class="req">R24</span></div>`:''}
+      ${FORMS[step.id](p, !canEdit(step.id))}
+      <div class="footer-nav">${navButtons()}</div>
+    </main>
+    <aside class="preview" aria-label="Live site preview">${previewPane(p)}</aside>
+  </div>`;
+}
+function navButtons(){
+  const i = STEPS.findIndex(s=>s.id===S.step);
+  const prev = STEPS[i-1], next = STEPS[i+1];
+  return `${prev?`<button class="btn" data-act="step" data-step="${prev.id}">← ${prev.title}</button>`:'<span></span>'}
+          ${next?`<button class="btn primary" data-act="step" data-step="${next.id}">Save and continue: ${next.title} →</button>`:''}`;
+}
+
+/* field helpers bound to the current park */
+function inp(path, label, o={}){
+  const v = getPath(park(), path) ?? '';
+  return `<label class="field"><span>${label}</span><input id="f-${path}" type="${o.type||'text'}" data-bind="${path}" value="${esc(v)}" placeholder="${esc(o.ph||'')}" ${o.ro?'disabled':''} ${o.mode?`inputmode="${o.mode}"`:''}>${o.hint?`<small>${o.hint}</small>`:''}</label>`;
+}
+function area(path, label, o={}){
+  const v = getPath(park(), path) ?? '';
+  return `<label class="field"><span>${label}</span><textarea id="f-${path}" data-bind="${path}" placeholder="${esc(o.ph||'')}" ${o.ro?'disabled':''}>${esc(v)}</textarea>${o.hint?`<small>${o.hint}</small>`:''}</label>`;
+}
+function sw(path, o={}){
+  return `<span class="switch"><input type="checkbox" id="f-${path}" data-check="${path}" ${getPath(park(),path)?'checked':''} ${o.ro?'disabled':''} aria-label="${esc(o.label||path)}"><span></span></span>`;
+}
+
+const FORMS = {
+diligence(p, ro){
+  const opts = ['received','requested','missing'];
+  const n = Object.values(p.diligence).filter(x=>x.status==='received').length;
+  return `<div class="note ${n===DILIGENCE.length?'ok':'info'}"><div class="grow"><b>${n} of ${DILIGENCE.length} items received.</b> When every item is in, the wizard can run without asking for anything more.</div></div>
+  <div class="card"><h3>Stage 1 packet</h3>
+  <div class="list">${DILIGENCE.map(([k,label])=>{const d=p.diligence[k];return `<div class="li">
+    <div class="grow"><b>${label}</b><small>Owner: ${esc(d.owner)}</small></div>
+    <select id="dil-${k}" data-bind="diligence.${k}.status" ${ro?'disabled':''} style="padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2)">
+      ${opts.map(o=>`<option value="${o}" ${d.status===o?'selected':''}>${o[0].toUpperCase()+o.slice(1)}</option>`).join('')}</select>
+    <span class="chip ${d.status==='received'?'ok':d.status==='requested'?'warn':'crit'}" style="min-width:76px;justify-content:center">${d.status}</span>
+  </div>`;}).join('')}</div>
+  <p class="sub" style="margin:0">Logins for Newbook, Campspot and Square are created by a person, not by the wizard.</p></div>`;
+},
+intake(p, ro){
+  const f = p.intake.fields;
+  const pending = f.filter(x=>x.state==='pending').length;
+  const sc = p.intake.score;
+  const fieldRows = f.length ? f.map((x,i)=>`<div class="li">
+      <div class="grow"><b>${esc(x.label)}</b>
+        ${x.state==='edited'?`<small>Old site said “${esc(x.value)}”</small><input id="intake-${i}" data-bind="intake.fields.${i}.final" value="${esc(x.final)}" style="margin-top:6px;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)" ${ro?'disabled':''}>`:`<small>${esc(x.value)}</small>`}
+        <small>Source: ${esc(x.source)}${x.note?` · ${esc(x.note)}`:''}</small></div>
+      <span class="chip ${x.state==='approved'?'ok':x.state==='rejected'?'crit':x.state==='edited'?'info':'warn'}">${x.state}</span>
+      <div class="acts" style="display:flex;gap:6px">
+        <button class="btn small" data-act="intake" data-i="${i}" data-state="approved" ${ro?'disabled':''}>Approve</button>
+        <button class="btn small" data-act="intake" data-i="${i}" data-state="edited" ${ro?'disabled':''}>Edit</button>
+        <button class="btn small" data-act="intake" data-i="${i}" data-state="rejected" ${ro?'disabled':''}>Reject</button>
+      </div></div>`).join('') : `<div class="li"><div class="grow"><b>No pre-fill run yet.</b><small>Enter the old site address and run pre-fill.</small></div><button class="btn small primary" data-act="run-prefill" ${ro?'disabled':''}>Run pre-fill</button></div>`;
+  return `${pending?`<div class="note warn"><div class="grow"><b>${pending} field${pending>1?'s':''} waiting for review.</b> Nothing pre-filled reaches the site until someone approves it.</div></div>`:''}
+  <div class="card"><h3>Old site ${REQS(['R26'])}</h3>
+    <div class="grid2">${inp('intake.oldUrl','Old site address',{ro, ph:'oldpark.com'})}
+      <div class="field"><span>Before/after snapshot</span><div class="linkbox">${p.intake.archived?`Archived ${fmtDate(p.intake.archived)}. Wayback Machine is the fallback.`:'Not archived yet. It is saved automatically before the domain switches.'}</div></div></div>
+  </div>
+  <div class="card"><h3>Pre-filled fields ${REQS(['R7'])}</h3><p class="sub">Sources: old site, calendar export, amenities list.</p>
+    <div class="list">${fieldRows}</div></div>
+  <div class="card"><h3>Intake score ${REQS(['R27'])} <span class="chip">Placement open</span></h3>
+    <p class="sub">Grades the old site and marketing. Whether this lives in the wizard or the audit tool is still open.</p>
+    ${sc?`<div class="score">${[['Traffic',sc.traffic],['Ads',sc.ads],['Social',sc.social],['SEO',sc.seo],['GEO',sc.geo]].map(([k,v])=>`<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
+    <div class="note info"><div class="grow">A low score means less of the old site is worth keeping, so the wizard leans on template copy and stand-ins.</div></div>`:'<div class="lockbar">No score yet. Runs with pre-fill.</div>'}
+  </div>`;
+},
+pages(p, roAll){
+  const onsite = S.role==='onsite';
+  const ro = roAll || onsite;
+  const groups = {};
+  PAGES.forEach(pg=>{ const g = pg.group||'Home'; (groups[g]=groups[g]||[]).push(pg); });
+  const navPreview = NAV_ORDER.filter(g=>(groups[g]||[]).some(pg=>on(p,pg.id)));
+  const list = ['Home',...NAV_ORDER].map(g=>((groups[g]||[]).length>1?`<div class="li" style="background:var(--surface-2);padding-block:7px"><span class="eyebrow">${g}</span></div>`:'') + (groups[g]||[]).map(pg=>`<div class="li ${groups[g].length>1?'child':''}">
+      <div class="grow"><b>${pg.label}</b> ${pg.notPlaced?'<span class="chip">Stage not placed</span>':''}${pg.id==='marina'?' <span class="chip">Q7 slips</span>':''}<small class="mono">${esc((p.domain.name||'park.example')+pg.slug)}</small></div>
+      ${pg.core?'<span class="chip accent">Always on</span>':sw('pages.'+pg.id,{ro, label:pg.label})}
+    </div>`).join('')).join('');
+  return `<div class="card"><h3>Standard sitemap ${REQS(['R13','R17'])}</h3>
+    <p class="sub">Turning a section off removes its page and menu link. Slugs follow the shared folder structure for search and AI answers.</p>
+    ${onsite?`<div class="lockbar">${ICON.lock} Page choices are set by the Anthem team. You can edit copy below.</div>`:''}
+    <div class="list">${list}</div>
+    <div class="field"><span>Menu this produces</span><div class="linkbox">${navPreview.join('  ·  ')}</div></div>
+  </div>
+  <div class="card"><h3>Home page copy ${REQS(['R11'])}</h3>
+    <p class="sub">Written in the shared Anthem voice. Pre-fill drafts it; a person edits it.</p>
+    ${inp('copy.headline','Headline',{ro:roAll, ph:'Leave blank to launch with a placeholder'})}
+    ${area('copy.intro','Intro',{ro:roAll, ph:'One or two sentences about the park'})}
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" data-act="draft-copy" ${roAll?'disabled':''}>Draft from pre-fill</button><span class="chip" style="align-self:center">Proposed: Human + AI</span></div>
+  </div>
+  <div class="card"><h3>A page with no template? ${REQS(['R14'])}</h3>
+    <p class="sub">Unique pages are built outside the wizard as unique edits.</p>
+    <div><button class="btn small" data-act="toast" data-msg="Request sent to SageCreek as a unique edit (prototype: nothing was sent)." ${ro?'disabled':''}>Request a custom page</button></div>
+  </div>`;
+},
+brand(p, ro){
+  const presets = [['#1F4E6B','#E9B44C'],['#7A3B26','#E8B04A'],['#35553A','#D9783A'],['#3C4F7A','#F0C35A'],['#2B5D63','#E86F4F'],['#5A3D6B','#E7B95A']];
+  return `<div class="card"><h3>Unique to ${esc(p.name)} ${REQS(['R12'])}</h3>
+    <div class="grid2">${inp('brand.primary','Primary color',{type:'color',ro})}${inp('brand.accent','Accent color (buttons)',{type:'color',ro})}</div>
+    <div class="field"><span>Starting palettes</span><div style="display:flex;gap:8px;flex-wrap:wrap">${presets.map(([a,b])=>`<button class="btn small" data-act="preset" data-p="${a}" data-a="${b}" ${ro?'disabled':''} aria-label="Palette ${a} and ${b}"><span style="width:14px;height:14px;border-radius:4px;background:${a}"></span><span style="width:14px;height:14px;border-radius:4px;background:${b}"></span></button>`).join('')}</div></div>
+    ${lum(p.brand.accent)>.42?'':`<div class="note warn"><div class="grow">This accent is dark, so button text switches to white. Check it against the hero photo.</div></div>`}
+    <div class="grid2">${inp('brand.logoText','Park name in logo',{ro})}
+      <div class="field"><span>Logo file</span><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="btn small file-btn">${ICON.up} Upload logo<input type="file" accept="image/*" id="logo-up" data-upload="brand.logoData" ${ro?'disabled':''}></span>
+        ${p.brand.logoData?`<button class="btn small" data-act="clear" data-path="brand.logoData" ${ro?'disabled':''}>Use wordmark</button>`:'<small class="muted">Using the shared wordmark until a file is uploaded.</small>'}</div></div></div>
+  </div>
+  <div class="card"><h3>Shared across every park ${REQS(['R10','R11'])} <span class="chip">${ICON.lock} Locked</span></h3>
+    <dl class="kv">
+      <dt>Fonts</dt><dd><span style="font-family:'DM Serif Display',Georgia,serif;font-size:17px">DM Serif Display</span> for headings, <span style="font-family:Mulish,sans-serif;font-weight:700">Mulish</span> for text (sample pairing)</dd>
+      <dt>Voice and tone</dt><dd>Warm, plain, outdoorsy. Short sentences. Talks to families and long-stay guests.</dd>
+      <dt>Logo structure</dt><dd>Mark + park name + “An Anthem Destination”</dd>
+      <dt>Sitemap</dt><dd>Standard sitemap, with sections switched per park</dd>
+    </dl></div>`;
+},
+photos(p, ro){
+  const slots = usedSlots(p);
+  const missing = slots.filter(s=>!p.photos[s.id]);
+  return `${missing.length?`<div class="note warn"><div class="grow"><b>${missing.length} section${missing.length>1?'s':''} will launch with stand-in photos.</b> That is fine for launch. If any are still live 30 days after launch, the wizard flags them.</div></div>`:`<div class="note ok"><div class="grow"><b>Every section has a real photo.</b></div></div>`}
+  <div class="card"><h3>Photos by section</h3><p class="sub">Only sections switched on in Pages appear here.</p>
+  <div class="photos">${slots.map(s=>{const ph=p.photos[s.id];const src = ph ? (ph.src==='scene'?scene(s.kind,p.brand.primary,p.brand.accent):ph.src) : scene(s.kind,p.brand.primary,p.brand.accent,true);
+    return `<div class="ph"><div class="img ${ph?'':'standin-img'}" style="background-image:url(&quot;${src}&quot;)">${ph?'':'<span class="stand-tag">Stand-in</span>'}</div>
+      <div class="cap"><b>${s.label}</b>
+      <div class="acts"><span class="btn small file-btn">${ICON.up} ${ph?'Replace':'Upload'}<input type="file" accept="image/*" id="up-${s.id}" data-upload="photos.${s.id}" ${ro?'disabled':''}></span>
+      ${ph?'':`<button class="btn small" data-act="sample-photo" data-slot="${s.id}" ${ro?'disabled':''}>Use sample</button>`}
+      ${ph?`<button class="btn small ghost" data-act="clear" data-path="photos.${s.id}" ${ro?'disabled':''}>Remove</button>`:''}</div></div></div>`;}).join('')}</div></div>`;
+},
+map(p, ro){
+  if (!on(p,'map')) return `<div class="lockbar">The Park map page is switched off in Pages, so there is nothing to set up here.</div>`;
+  const m = p.map;
+  return `<div class="card"><h3>Existing map</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <span class="btn small file-btn">${ICON.up} ${m.uploaded?'Replace map':'Upload map'}<input type="file" accept="image/*,application/pdf" id="map-up" data-upload="map.upload" ${ro?'disabled':''}></span>
+      ${m.uploaded?`<span class="chip ok">Map received</span>`:'<span class="chip warn">No map yet. A stand-in shows on the site.</span>'}
+    </div>
+    ${m.upload?`<div class="ph"><div class="img" style="background-image:url(&quot;${m.upload}&quot;);aspect-ratio:16/9"></div><div class="cap"><b>Uploaded map</b></div></div>`:''}
+  </div>
+  <div class="card"><h3>Branded overlay ${REQS(['R15'])}</h3>
+    <p class="sub">Open question from the whiteboard: is the map treatment the same for every park, or the same map?</p>
+    <div class="field"><span>Overlay style</span><div class="seg">${[['branded','Branded illustration'],['satellite','Aerial + labels'],['simple','Simple']].map(([k,l])=>`<button data-act="map-style" data-style="${k}" class="${m.style===k?'on':''}" ${ro?'disabled':''}>${l}</button>`).join('')}</div></div>
+    <div class="ph"><div class="img" style="aspect-ratio:16/9;background-image:url(&quot;${m.uploaded && m.overlay==='ready' ? mapSvg(p.brand.primary,p.brand.accent,m.style) : mapSvg('#8C9592','#B7BEBB','simple')}&quot;)">${m.overlay==='ready'?'':'<span class="stand-tag">Stand-in</span>'}</div>
+      <div class="cap"><b>${m.overlay==='ready'?'Overlay ready':m.overlay==='generating'?'Generating overlay…':'No overlay yet'}</b>
+      <div class="acts"><button class="btn small primary" data-act="gen-map" ${ro||!m.uploaded||m.overlay==='generating'?'disabled':''}>${m.overlay==='ready'?'Regenerate':'Generate overlay'}</button>
+      ${m.overlay==='ready'?`<button class="btn small" data-act="toast" data-msg="Marked approved (prototype).">Approve</button>`:''}</div></div></div>
+  </div>`;
+},
+booking(p, ro){
+  const u = units(p);
+  const sq = [
+    ['bowling','Bowling lanes','funcenter'], ['golf','Golf tee times','golf'], ['daypass','Day passes','home'], ['boats','Boat and golf cart rentals','marina']
+  ].filter(x=>on(p,x[2]));
+  return `<div class="card"><h3>Site reservations ${REQS(['R18','R19'])}</h3>
+    <p class="sub">Each park has its own account. Switching platform changes this park only.</p>
+    <div class="field"><span>Booking platform</span><div class="seg">
+      <button data-act="platform" data-v="newbook" class="${p.platform==='newbook'?'on':''}" ${ro?'disabled':''}>Newbook</button>
+      <button data-act="platform" data-v="campspot" class="${p.platform==='campspot'?'on':''}" ${ro?'disabled':''}>Campspot</button></div>
+      <small>Q3 is open: new parks may launch on Campspot.</small></div>
+    ${p.platform==='newbook' ? inp('booking.propertyId','Newbook property ID',{ro, ph:'from the park’s Newbook account'}) : inp('booking.campspotSlug','Campspot park slug',{ro, ph:'from the Campspot parent account'})}
+    <div class="list">${u.length?u.map(x=>`<div class="li"><div class="grow"><b>${x.label}</b><small>Category code ${x.code}</small></div><div class="linkbox" style="flex:1 1 260px">${esc(deepLink(p,x))}</div></div>`).join(''):'<div class="li"><div class="grow"><b>No stay types switched on.</b><small>Turn on RV sites, cottages or other stays in Pages.</small></div></div>'}
+      <div class="li"><div class="grow"><b>“Check availability” (all stay types)</b></div><div class="linkbox" style="flex:1 1 260px">${esc(deepLink(p,null))}</div></div></div>
+    <p class="sub" style="margin:0">Link formats are illustrative. The real ones come from each park’s booking account.</p>
+  </div>
+  <div class="card"><h3>Other bookables ${REQS(['R20'])}</h3>
+    <p class="sub">Things that aren’t stays go through the park’s own Square account. Without a Square link, the button asks guests to call.</p>
+    <div class="list">${sq.map(([k,l])=>{const s=p.booking.square[k];return `<div class="li"><div class="grow"><b>${l}</b>${k==='boats'?'<small>Rentals need waivers. Owner not set (Q8).</small>':''}</div>
+      <div class="seg"><button data-act="sq-mode" data-k="${k}" data-v="square" class="${s.mode==='square'?'on':''}" ${ro?'disabled':''}>Square link</button><button data-act="sq-mode" data-k="${k}" data-v="call" class="${s.mode==='call'?'on':''}" ${ro?'disabled':''}>Call to book</button></div>
+      ${s.mode==='square'?`<input id="sq-${k}" data-bind="booking.square.${k}.link" value="${esc(s.link)}" placeholder="https://square.link/…" style="flex:1 1 220px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-family:var(--f-mono);font-size:12px" ${ro?'disabled':''}>`:''}</div>`;}).join('')}</div>
+  </div>
+  <div class="card"><h3>Call-in numbers</h3>
+    <div class="grid2">${inp('booking.phone','Reservations phone',{ro, ph:'(555) 000-0000', type:'tel'})}${on(p,'events')?inp('booking.eventsPhone','Weddings & events phone',{ro, ph:'(555) 000-0000', type:'tel', hint:'Weddings and events are call-in only.'}):''}</div>
+  </div>`;
+},
+pricing(p, ro){
+  const u = units(p);
+  const lt = on(p,'longterm');
+  return `<div class="card"><h3>Rates by stay type ${REQS(['R2'])}</h3>
+    <label class="toggle-row">${sw('pricing.showPrices',{ro,label:'Show prices on site'})} Show “from” prices on the site</label>
+    <div class="list">${u.map(x=>`<div class="li"><div class="grow"><b>${x.label}</b><small>Short-term${lt?' and long-term':''}</small></div>
+      <label class="field" style="width:130px"><span>Nightly from ($)</span><input id="pr-${x.id}-n" inputmode="numeric" data-bind="pricing.units.${x.id}.night" value="${esc(p.pricing.units[x.id].night)}" ${ro?'disabled':''}></label>
+      ${lt?`<label class="field" style="width:130px"><span>Monthly from ($)</span><input id="pr-${x.id}-m" inputmode="numeric" data-bind="pricing.units.${x.id}.month" value="${esc(p.pricing.units[x.id].month)}" ${ro?'disabled':''}></label>`:''}</div>`).join('') || '<div class="li"><div class="grow"><b>No stay types switched on.</b></div></div>'}</div>
+    <p class="sub" style="margin:0">Live rates and availability stay in ${p.platform==='campspot'?'Campspot':'Newbook'}. These are display prices only.</p>
+  </div>
+  <div class="card"><h3>Months closed</h3><p class="sub">For seasonal parks. The site shows a season note and booking opens for next season.</p>
+    <div class="months">${MONTHS.map((m,i)=>`<button data-act="month" data-i="${i}" class="${p.pricing.closed.includes(i)?'closed':''}" aria-pressed="${p.pricing.closed.includes(i)}" ${ro?'disabled':''}>${m}</button>`).join('')}</div>
+  </div>`;
+},
+domain(p, ro){
+  const d = p.domain;
+  const steps = [['owner','Domain owner identified'],['dns','DNS records added by the owner'],['ssl','SSL certificate issued'],['redirects','Old pages redirect to new ones']];
+  return `<div class="card"><h3>Domain ${REQS(['R23'])}</h3>
+    <div class="grid3">${inp('domain.name','Domain',{ro, ph:'park.com'})}${inp('domain.registrar','Registrar',{ro, ph:'GoDaddy, Squarespace…'})}${inp('domain.dnsOwner','Who controls DNS',{ro, ph:'Person or company'})}</div>
+    <div class="list">${steps.map(([k,l])=>`<div class="li"><div class="grow"><b>${l}</b></div>${sw('domain.'+k,{ro,label:l})}</div>`).join('')}</div>
+  </div>
+  <div class="card"><h3>Content migration</h3><p class="sub">Approved pre-fill fields move into the new pages. Old URLs are mapped so search rankings carry over.</p>
+    <dl class="kv"><dt>Old site</dt><dd>${esc(p.intake.oldUrl||'Not recorded')}</dd><dt>Snapshot</dt><dd>${p.intake.archived?`Archived ${fmtDate(p.intake.archived)}`:'Not archived yet'} <span class="req">R26</span></dd></dl>
+  </div>`;
+},
+launch(p, ro){
+  const c = checks(p);
+  const blocks = c.filter(x=>!x.ok && x.level==='block').length;
+  const liveBlocks = c.filter(x=>!x.ok && x.level==='live').length;
+  const stages = [['draft','Draft','Wizard in progress'],['preview','QC preview','SageCreek checks the build'],['soft','Soft launch','Staging link for Anthem review'],['live','Live','On the park’s domain']];
+  const idx = stages.findIndex(s=>s[0]===p.launch.stage);
+  const row = x => `<div class="li"><span class="st">${x.ok?ICON.done:x.level==='block'?'<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="var(--crit)"/><path d="M6 6l6 6M12 6l-6 6" stroke="var(--surface)" stroke-width="1.8" stroke-linecap="round"/></svg>':ICON.partial}</span><div class="grow"><b>${esc(x.text)}</b><small>${x.ok?'Done':x.level==='block'?'Must fix before QC preview':x.level==='live'?'Must fix before going live':'Can launch with this. Tracked after launch.'}</small></div>${x.ok?'':`<button class="btn small" data-act="step" data-step="${x.step}">Fix</button>`}</div>`;
+  let action = '';
+  if (p.launch.stage==='draft') action = `<button class="btn primary" data-act="advance" ${blocks||S.role==='onsite'?'disabled':''}>Send to QC preview</button>${blocks?`<small class="muted">${blocks} item${blocks>1?'s':''} must be fixed first.</small>`:''}`;
+  else if (p.launch.stage==='preview') action = `<button class="btn primary" data-act="advance" ${S.role==='onsite'?'disabled':''}>Soft launch on staging link</button><button class="btn" data-act="back-stage">Back to draft</button>`;
+  else if (p.launch.stage==='soft') action = `<button class="btn primary" data-act="advance" ${!canApproveLaunch()||liveBlocks?'disabled':''}>Approve and go live</button>${!canApproveLaunch()?'<small class="muted">Only the Anthem team can approve launch.</small>':liveBlocks?`<small class="muted">Finish the domain steps first.</small>`:''}<button class="btn" data-act="back-stage">Back to QC preview</button>`;
+  else { const d = days(D(p.launch.liveOn), TODAY); const ph = placeholders(p); action = `<span class="chip ok">Live since ${fmtDate(p.launch.liveOn)}, approved by ${esc(p.launch.approvedBy)}</span>${ph.length?`<small class="muted">${ph.length} stand-in${ph.length>1?'s':''} live. Day-30 alert ${d>=30?'is showing now':'on '+fmtDate(new Date(D(p.launch.liveOn).getTime()+30*86400000))}.</small>`:''}`; }
+  return `<div class="card"><h3>Staged launch ${REQS(['R8'])}</h3>
+    <div class="pipeline">${stages.map((s,i)=>`<div class="pipe ${i<idx||p.launch.stage==='live'&&i===idx?'done':i===idx?'cur':''}"><b>${s[1]}</b><small>${s[2]}</small></div>`).join('')}</div>
+    ${p.launch.stage==='soft'?`<div class="field"><span>Staging link</span><div class="linkbox">https://${esc(p.id)}.anthem-preview.example</div></div>`:''}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">${action}</div>
+  </div>
+  <div class="card"><h3>Launch checklist ${REQS(['R4','R5'])}</h3>
+    <p class="sub">The site can go live before every input is in. Stand-ins are allowed and tracked.</p>
+    <div class="list">${c.map(row).join('')}</div></div>`;
+},
+stage2(p){
+  return `<div class="note info"><div class="grow"><b>Stage 2 starts after launch.</b> These fields show where it will sit. Details come from Stage 2 discovery.</div></div>
+  <div class="card"><h3>Tracking ${REQS(['R3'])} <span class="chip">Stage 2</span></h3>
+    <div class="grid3">${inp('stage2.pixel','Facebook Pixel ID',{ro:true, ph:'Per-park ad account'})}${inp('stage2.ga','Google Analytics ID',{ro:true, ph:'G-XXXXXXX'})}${inp('stage2.gads','Google Ads tag',{ro:true, ph:'Agency-style admin'})}</div></div>
+  <div class="card"><h3>Separate projects</h3>
+    <div class="list">
+      <div class="li"><div class="grow"><b>CRM and texting</b><small>One shared CRM, contacts split by park</small></div><span class="chip">MarTech project</span><span class="req">R21</span></div>
+      <div class="li"><div class="grow"><b>Ad accounts</b><small>Facebook grouped by region past about 25 accounts (Q6)</small></div><span class="chip">Ads project</span><span class="req">R22</span></div>
+      <div class="li"><div class="grow"><b>Social profiles, business profiles, first ads</b><small>Same pre-fill, review, checklist, launch flow</small></div><span class="chip">Digital integration agents</span><span class="req">R30</span></div>
+    </div></div>`;
+},
+team(p, ro){
+  const lockAdd = S.role!=='anthem';
+  return `<div class="card"><h3>People with access ${REQS(['R24'])}</h3>
+    <div class="list">${p.team.map(t=>`<div class="li"><div class="grow"><b>${esc(t.name)}</b><small>${esc(t.scope)}</small></div><span class="chip ${t.role==='Anthem'?'accent':t.role==='SageCreek'?'info':''}">${esc(t.role)}</span></div>`).join('')}</div>
+    <div><button class="btn small" data-act="toast" data-msg="Invite drafted. In the real tool a person creates the login." ${lockAdd?'disabled':''}>Add a person</button> ${lockAdd?'<small class="muted">Only the Anthem team adds users.</small>':''}</div></div>
+  <div class="card"><h3>What each role can do</h3>
+    <div class="list">${Object.values(ROLES).map(r=>`<div class="li"><div class="grow"><b>${r.label}</b><small>${r.blurb}</small></div></div>`).join('')}</div></div>
+  <div class="card"><h3>Recent activity ${REQS(['R1'])}</h3>
+    <div class="activity">${p.activity.slice(-8).reverse().map(a=>`<div><time>${fmtDay(a.when)}</time><span><b>${esc(a.who)}</b> · ${esc(a.what)}</span></div>`).join('') || '<span class="muted">No edits yet.</span>'}</div></div>`;
+}
+};
+
+/* ---------- preview ---------- */
+function previewPane(p){
+  return `<div class="pv-bar">
+      <div class="url" title="${esc(p.domain.name||'')}">${p.launch.stage==='live'?'https://':'preview · '}${esc(p.domain.name||p.id+'.anthem-preview.example')}</div>
+      <div class="seg"><button data-act="device" data-v="desktop" class="${S.device==='desktop'?'on':''}">Desktop</button><button data-act="device" data-v="phone" class="${S.device==='phone'?'on':''}">Phone</button></div>
+      <button class="btn small pv-close" data-act="preview-close" style="display:none">Close</button>
+    </div>
+    <div class="pv-scroll"><div class="pv-frame ${S.device==='phone'?'phone':''}" id="pv-frame">${siteHTML(p)}</div></div>
+    <div class="pv-status" id="pv-status">Hover a button in the preview to see where it goes.</div>`;
+}
+function siteHTML(p){
+  const b = p.brand, pr = b.primary, ac = b.accent;
+  const vars = `--sp:${pr};--sa:${ac};--sa-ink:${inkOn(ac)};--sp-soft:${mix(pr,'#ffffff',.9)}`;
+  const img = (slot, kind) => { const ph = p.photos[slot]; if (!ph) return {style:`background-image:url(&quot;${scene(kind,pr,ac,true)}&quot;)`, tag:'<span class="stand-tag">Stand-in photo</span>', cls:'is-standin'}; return {style:`background-image:url(&quot;${ph.src==='scene'?scene(kind,pr,ac):ph.src}&quot;)`, tag:'', cls:''}; };
+  const txt = (v, label) => v.trim() ? esc(v) : `<span class="ph-text">[${label}]</span>`;
+  const phone = p.booking.phone || '(555) 000-0000';
+  const call = n => `tel:${(n||phone).replace(/[^0-9]/g,'')}`;
+  const btn = (label, href, cls='') => `<a class="s-btn ${cls}" data-href="${esc(href)}">${label}</a>`;
+  const navG = NAV_ORDER.filter(g=>PAGES.some(pg=>pg.group===g && on(p,pg.id)));
+  const logo = b.logoData ? `<img src="${b.logoData}" alt="${esc(b.logoText)}">` :
+    `<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="${pr}"/><path d="M7 22l7-9 4 5 3-3 6 7z" fill="${ac}"/><path d="M7 24h20" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+     <span><span class="nm">${esc(b.logoText||p.name)}</span><small>An Anthem Destination</small></span>`;
+  const h = img('hero','hero');
+  const closed = p.pricing.closed.slice().sort((a,b)=>a-b);
+  const season = closed.length ? `<div class="s-season">Closed ${closed.map(i=>MONTHS[i]).join(', ')} · Booking is open for next season</div>` : '';
+  const u = units(p);
+  const stays = u.length ? `<section class="s-sec"><div class="s-kicker">Stay</div><h2>Find your spot</h2>
+    <div class="s-cards">${u.map(x=>{const im=img(x.photo,PHOTO_SLOTS.find(s=>s.id===x.photo).kind); const n=p.pricing.units[x.id].night;
+      return `<div class="s-card"><div class="im ${im.cls}" style="${im.style}">${im.tag}</div><div class="bd"><h3>${x.label}</h3>
+        ${p.pricing.showPrices?`<div class="price">${n?`From <b>$${esc(n)}</b> / night`:'<span class="ph-text">[rate]</span>'}</div>`:''}
+        ${btn('Book '+x.label.toLowerCase(), deepLink(p,x))}</div></div>`;}).join('')}</div></section>` : '';
+  const ltMin = u.map(x=>+p.pricing.units[x.id].month).filter(Boolean).sort((a,b)=>a-b)[0];
+  const longterm = on(p,'longterm') ? `<section class="s-band"><div><div class="s-kicker" style="color:#fff;opacity:.8">Long-term stays</div><h2>Stay the season</h2><p>Monthly sites ${ltMin?`from $${ltMin} / month`:'<span class="ph-text">[monthly rate]</span>'}. Lock in your rate and make the park your home base.</p></div><div>${btn('Ask about monthly sites', call())}</div></section>` : '';
+  const todo = [];
+  if (on(p,'funcenter')){ const s=p.booking.square.bowling, im=img('funcenter','bowling'); todo.push({t:'Fun center & bowling', d:'Lanes, arcade, mini golf and pizza.', im, b: s.mode==='square'&&s.link ? btn('Reserve a lane', s.link) : btn('Call to reserve a lane', call(),'call')}); }
+  if (on(p,'golf')){ const s=p.booking.square.golf, im=img('golf','golf'); todo.push({t:'Golf', d:'Tee times for guests and day visitors.', im, b: s.mode==='square'&&s.link ? btn('Book a tee time', s.link) : btn('Call for tee times', call(),'call')}); }
+  if (on(p,'marina')){ const s=p.booking.square.boats, im=img('marina','marina'); todo.push({t:'Marina & boating', d:'Slips, launch and rentals.', im, b: s.mode==='square'&&s.link ? btn('Rent a boat', s.link) : btn('Call about slips', call(),'call')}); }
+  if (on(p,'beach')){ const im=img('beach','pool'); todo.push({t:'Beach & pool', d:'Swim, sun and splash.', im, b: btn('See hours', '/things-to-do/beach-pool','call')}); }
+  if (on(p,'dining')){ const im=img('dining','dining'); todo.push({t:'Dining', d:'On-site restaurant and grab-and-go.', im, b: btn('See the menu', '/dining','call')}); }
+  const todoSec = todo.length ? `<section class="s-sec tint"><div class="s-kicker">Things to do</div><h2>Plenty to fill the day</h2>
+    <div class="s-cards">${todo.map(x=>`<div class="s-card"><div class="im ${x.im.cls}" style="${x.im.style}">${x.im.tag}</div><div class="bd"><h3>${x.t}</h3><div class="price">${x.d}</div>${x.b}</div></div>`).join('')}</div></section>` : '';
+  const evImg = img('events','events');
+  const events = on(p,'events') ? `<section class="s-sec"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:center">
+     <div class="s-card"><div class="im ${evImg.cls}" style="${evImg.style}">${evImg.tag}</div></div>
+     <div style="display:grid;gap:10px"><div class="s-kicker">Weddings & events</div><h2>Celebrate by the water</h2><p style="margin:0;color:var(--s-muted)">Weddings, reunions and retreats. Call our events team to plan yours.</p>
+     <div>${btn('Call '+esc(p.booking.eventsPhone||'[events phone]'), call(p.booking.eventsPhone),'pri')}</div></div></div>
+     ${on(p,'calendar')?`<div class="s-events">${[['Nov','7','Fall chili cook-off'],['Nov','14','Bingo night at the pavilion'],['Nov','27','Thanksgiving potluck']].map(([m,d,t])=>`<div class="s-ev"><div class="dt">${m}<b>${d}</b></div><div><b>${t}</b><div style="font-size:12px;color:var(--s-muted)">Sample event from the park calendar</div></div></div>`).join('')}</div>`:''}
+   </section>` : '';
+  const mapReady = p.map.uploaded && p.map.overlay==='ready';
+  const mapSec = on(p,'map') ? `<section class="s-sec tint"><div class="s-kicker">Park map</div><h2>Get your bearings</h2>
+     <div class="s-map" style="background-image:url(&quot;${mapReady?mapSvg(pr,ac,p.map.style):mapSvg('#8C9592','#B7BEBB','simple')}&quot;)">${mapReady?'':'<span class="stand-tag">Stand-in map</span>'}</div></section>` : '';
+  return `<div class="site" style="${vars}">
+    <div class="s-util"><span>${esc(phone)}</span><span>An Anthem Destination</span></div>
+    <header class="s-head"><a class="s-logo" data-href="/">${logo}</a>
+      <nav class="s-nav">${navG.map(g=>`<a data-href="/${g.toLowerCase().replace(/[^a-z]+/g,'-')}">${g}</a>`).join('')}</nav>
+      ${btn('Book now', deepLink(p,null))}
+      <span class="s-burger" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" stroke-width="2"><path d="M2 4h12M2 8h12M2 12h12"/></svg></span>
+    </header>
+    <section class="s-hero" style="${h.style}">${h.tag}<div class="in">
+      <h1>${txt(p.copy.headline,'Headline placeholder')}</h1><p>${txt(p.copy.intro,'Intro placeholder')}</p>
+      <div class="ctas">${btn('Check availability', deepLink(p,null))}${u.length?btn('Explore stays','/stay','alt'):''}</div></div></section>
+    ${season}${stays}${longterm}${todoSec}${events}${mapSec}
+    <footer class="s-foot">
+      <div><b>${esc(p.name)}</b>${esc(p.location||'')}<br>${esc(phone)}</div>
+      <div><b>Explore</b>${navG.map(g=>`<a data-href="/${g.toLowerCase().replace(/[^a-z]+/g,'-')}">${g}</a>`).join('')}</div>
+      <div><b>Plan</b><a data-href="${esc(deepLink(p,null))}">Book a stay</a>${on(p,'events')?'<a data-href="/weddings-events">Weddings & events</a>':''}<a data-href="/contact">Contact</a></div>
+      <div class="anth"><span>Part of Anthem Destinations</span><span>© 2026 ${esc(p.name)}</span></div>
+    </footer>
+  </div>`;
+}
+function refreshPreview(){
+  const f = document.getElementById('pv-frame'); if (f) f.innerHTML = siteHTML(park());
+}
+function refreshRail(){
+  if (S.view!=='park') return;
+  const p = park();
+  document.querySelectorAll('.rail .step').forEach(el=>{ const st=el.querySelector('.st'); if (st) st.innerHTML = ICON[stepStatus(p, el.dataset.step)]; });
+  const pct = stage1Pct(p);
+  const fill = document.querySelector('.park-card .fill'); if (fill) fill.style.width = pct+'%';
+  const lab = document.querySelector('.park-card .prog span'); if (lab) lab.textContent = pct+'%';
+}
+
+function notesDrawer(){
+  return `<div class="drawer" data-act="notes-close"><div class="panel" data-stop="1" role="dialog" aria-label="Prototype notes">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>Prototype notes</h2><button class="btn small" data-act="notes-close">Close</button></div>
+    <p class="muted" style="margin:0">A clickable front end with no backend. Everything is sample data and is saved only in this browser. Built from the Anthem Site Wizard requirements doc (Oct 26 version).</p>
+    <h3>Covered</h3><ul>
+      <li>R1 save and continue: autosave, resume banner, activity log</li>
+      <li>R2, R4, R5 Stage 1 steps, launch with stand-ins, 30-day stand-in alert</li>
+      <li>R7, R26, R27 pre-fill review, old-site snapshot, intake score (placement still open)</li>
+      <li>R8 QC preview → soft launch → live, with Anthem-only approval</li>
+      <li>R9 diligence packet; R10–R13 shared vs per-park brand and sitemap toggles</li>
+      <li>R15 map with branded overlay; R17 SEO/GEO slugs; R18–R20 Newbook/Campspot deep links, Square or call-in</li>
+      <li>R23 domain and redirects; R24 per-park roles (switch “Viewing as”)</li>
+      <li>R3 Stage 2 and R6 automation levels shown as placeholders, not built</li></ul>
+    <h3>Assumed for now</h3><ul>
+      <li>Q2 sitemap follows the Lake Gaston Resort structure</li>
+      <li>Q3 both Newbook and Campspot are supported, chosen per park</li>
+      <li>Q4 automation levels are our proposal</li>
+      <li>Q7 marina slips are call-in until decided</li>
+      <li>Q15 “Anthem Site Wizard” is a working name</li>
+      <li>Link formats, fonts and park details other than Lake Gaston are placeholders</li></ul>
+    <h3>Out of scope (separate projects)</h3><ul><li>R21 CRM, R22 ad accounts, R28–R30 audit tool and digital integration agents</li></ul>
+    <h3>Reset</h3><div><button class="btn" data-act="reset">Reset sample data</button></div>
+  </div></div>`;
+}
+
+/* ================= events ================= */
+let toastTimer;
+function toast(msg){ ui.toast = msg; render(); clearTimeout(toastTimer); toastTimer = setTimeout(()=>{ ui.toast=null; const t=document.querySelector('.toast'); if (t) t.remove(); }, 3200); }
+function go(parkId, step){
+  if (parkId) S.parkId = parkId;
+  S.view = 'park';
+  if (step) S.step = step;
+  else { const p = park(); S.step = (p.launch.stage==='live') ? 'launch' : (['diligence','intake',...STAGE1,'launch'].find(s=>stepStatus(p,s)!=='done') || 'launch'); }
+  ui.showPreview = false;
+  save(); render(); window.scrollTo(0,0);
+}
+function touch(what){ logActivity(what); save(); refreshPreview(); refreshRail(); }
+
+app.addEventListener('click', e=>{
+  const t = e.target.closest('[data-act]');
+  // preview links: show where they go instead of navigating
+  const link = e.target.closest('.site [data-href]');
+  if (link){ e.preventDefault(); const h=link.dataset.href; toast(`On the live site this opens: ${esc(h.startsWith('tel:')?'a call to '+h.slice(4):h)}`); return; }
+  if (!t) return;
+  const a = t.dataset.act, p = S.view==='park'?park():null;
+  if (t.tagName==='SELECT' || (t.tagName==='INPUT' && t.type!=='checkbox')) return;
+  switch(a){
+    case 'home': S.view='parks'; save(); render(); break;
+    case 'open': go(t.dataset.park, t.dataset.step); break;
+    case 'step': S.step=t.dataset.step; ui.showPreview=false; save(); render(); window.scrollTo(0,0); break;
+    case 'notes': ui.notes=true; render(); break;
+    case 'notes-close': if (e.target===t || t.tagName==='BUTTON'){ ui.notes=false; render(); } break;
+    case 'toggle-tags': S.showTags=!S.showTags; save(); render(); break;
+    case 'preview-open': ui.showPreview=true; render(); break;
+    case 'preview-close': ui.showPreview=false; render(); break;
+    case 'device': S.device=t.dataset.v; save(); render(); break;
+    case 'toast': toast(esc(t.dataset.msg)); break;
+    case 'reset': try{localStorage.removeItem(STORE_KEY);}catch(_){} S=seed(); ui.notes=false; render(); toast('Sample data reset.'); break;
+    case 'intake': { const f=p.intake.fields[+t.dataset.i]; f.state=t.dataset.state; if (f.state==='edited' && f.final==null) f.final=f.value; logActivity('Reviewed pre-filled fields'); save(); render(); break; }
+    case 'run-prefill': {
+      if (!p.intake.oldUrl) { toast('Enter the old site address first.'); break; }
+      p.intake.fields = [
+        {label:'Park name', value:p.name, source:'Old site header', state:'pending'},
+        {label:'Phone', value:'(555) 010-0000', source:'Old site footer', state:'pending'},
+        {label:'Site types', value:'RV sites, Tent sites', source:'Booking categories', state:'pending'},
+        {label:'Amenities', value:'Pool, playground, camp store', source:'Old site amenities page', state:'pending'}];
+      p.intake.score = {traffic:'C',ads:'F',social:'D',seo:'D',geo:'F'}; p.intake.archived = TODAY.toISOString();
+      logActivity('Ran pre-fill from old site'); save(); render(); toast('Pre-fill ran on sample data. Review each field.'); break; }
+    case 'draft-copy': p.copy.headline = p.copy.headline || `Room to roam at ${p.name}`; p.copy.intro = p.copy.intro || `${units(p).map(x=>x.label).join(', ') || 'Campsites'} with ${['funcenter','beach','marina','golf'].filter(k=>on(p,k)).map(k=>PAGES.find(x=>x.id===k).label.toLowerCase()).join(', ') || 'plenty to do'} for the whole crew.`; logActivity('Drafted home copy'); save(); render(); break;
+    case 'preset': p.brand.primary=t.dataset.p; p.brand.accent=t.dataset.a; logActivity('Changed park colors'); save(); render(); break;
+    case 'clear': setPath(p, t.dataset.path, null); logActivity('Removed a file'); save(); render(); break;
+    case 'sample-photo': p.photos[t.dataset.slot]={src:'scene'}; logActivity('Added photos'); save(); render(); break;
+    case 'map-style': p.map.style=t.dataset.style; save(); render(); break;
+    case 'gen-map': p.map.overlay='generating'; render(); setTimeout(()=>{ p.map.overlay='ready'; logActivity('Generated map overlay'); save(); if (S.step==='map') render(); else refreshPreview(); }, 1400); break;
+    case 'platform': p.platform=t.dataset.v; logActivity(`Switched booking to ${t.dataset.v==='campspot'?'Campspot':'Newbook'}`); save(); render(); toast(`Booking links for ${esc(p.name)} now point to ${t.dataset.v==='campspot'?'Campspot':'Newbook'}. Other parks are unchanged.`); break;
+    case 'sq-mode': p.booking.square[t.dataset.k].mode=t.dataset.v; logActivity('Updated other bookables'); save(); render(); break;
+    case 'month': { const i=+t.dataset.i, c=p.pricing.closed; const k=c.indexOf(i); k>=0?c.splice(k,1):c.push(i); logActivity('Updated closed months'); save(); render(); break; }
+    case 'advance': { const order=['draft','preview','soft','live']; const i=order.indexOf(p.launch.stage); p.launch.stage=order[i+1]; if (p.launch.stage==='live'){ p.launch.liveOn=TODAY.toISOString(); p.launch.approvedBy=ROLES[S.role].who; } logActivity(`Moved launch to ${p.launch.stage}`); save(); render(); if (p.launch.stage==='live') toast(`${esc(p.name)} is live (in the prototype).`); break; }
+    case 'back-stage': { const order=['draft','preview','soft','live']; p.launch.stage=order[Math.max(0,order.indexOf(p.launch.stage)-1)]; save(); render(); break; }
+  }
+});
+app.addEventListener('keydown', e=>{
+  const tr = e.target.closest('tr[data-act="open"]');
+  if (tr && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); go(tr.dataset.park); }
+  if (e.key==='Escape' && (ui.notes || ui.showPreview)){ ui.notes=false; ui.showPreview=false; render(); }
+});
+app.addEventListener('input', e=>{
+  const el = e.target;
+  if (el.dataset.ui){ ui[el.dataset.ui] = el.value; return; }
+  if (el.dataset.bind && el.tagName!=='SELECT'){
+    setPath(park(), el.dataset.bind, el.value);
+    const step = STEPS.find(s=>s.id===S.step);
+    touch(`Edited ${step.title}`);
+  }
+});
+app.addEventListener('change', e=>{
+  const el = e.target;
+  if (el.id==='role-select'){
+    S.role = el.value;
+    if (S.role==='onsite'){ S.parkId='triple-r'; if (S.view==='park' && !canEdit(S.step) && S.step!=='pages') S.step='photos'; }
+    save(); render(); toast(`Viewing as ${esc(ROLES[S.role].label)}. ${esc(ROLES[S.role].blurb)}`); return;
+  }
+  if (el.id==='step-select'){ S.step = el.value; save(); render(); window.scrollTo(0,0); return; }
+  if (el.dataset.ui){ ui[el.dataset.ui] = el.value; return; }
+  if (el.dataset.check){
+    setPath(park(), el.dataset.check, el.checked);
+    touch(`Edited ${STEPS.find(s=>s.id===S.step).title}`); render(); return;
+  }
+  if (el.tagName==='SELECT' && el.dataset.bind){ setPath(park(), el.dataset.bind, el.value); touch('Updated diligence packet'); render(); return; }
+  if (el.dataset.bind && el.type==='color'){ render(); return; }
+  if (el.dataset.upload && el.files && el.files[0]){
+    const path = el.dataset.upload, file = el.files[0];
+    const r = new FileReader();
+    r.onload = () => {
+      const p = park();
+      if (path==='brand.logoData') p.brand.logoData = r.result;
+      else if (path==='map.upload'){ p.map.upload = file.type.startsWith('image/') ? r.result : null; p.map.uploaded = true; p.map.overlay='none'; }
+      else setPath(p, path, {src:r.result});
+      logActivity(path.startsWith('photos')?'Added photos':path==='map.upload'?'Uploaded park map':'Uploaded logo');
+      save(); render();
+    };
+    r.readAsDataURL(file);
+  }
+});
+app.addEventListener('submit', e=>{
+  e.preventDefault();
+  if (e.target.dataset.form==='new-park'){
+    const name = (ui.newName||'').trim(); if (!name){ toast('Enter a park name.'); return; }
+    let id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'park'; while (S.parks[id]) id += '-2';
+    const np = basePark(id, name); np.platform = ui.newPlatform; np.location = 'Under contract';
+    S.parks[id] = np; S.order.push(id); ui.newName=''; S.parkId=id;
+    logActivity('Started diligence packet'); go(id, 'diligence');
+  }
+});
+app.addEventListener('mouseover', e=>{
+  const l = e.target.closest('.site [data-href]'); const st = document.getElementById('pv-status'); if (!st) return;
+  if (l){ const h=l.dataset.href; st.innerHTML = h.startsWith('tel:') ? `Calls <b>${esc(h.slice(4))}</b>` : h.startsWith('http') ? `Opens <b>${esc(h)}</b>` : `Goes to page <b>${esc((park().domain.name||'')+h)}</b>`; }
+});
+
+render();
+})();
+</script>
+
+</body></html>
